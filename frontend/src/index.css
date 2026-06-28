@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #f7f7fc;
+  --foreground: #0b0b14;
+  --card: #ffffff;
+  --card-foreground: #0b0b14;
+  --primary: #3a6ee8;
+  --primary-foreground: #ffffff;
+  --secondary: #ededf5;
+  --secondary-foreground: #0b0b14;
+  --muted: #ededf5;
+  --muted-foreground: #5f5f7a;
+  --accent: #22b96b;
+  --accent-foreground: #ffffff;
+  --destructive: #d4183d;
+  --border: rgba(0, 0, 0, 0.09);
+  --ring: rgba(58, 110, 232, 0.4);
+  --sidebar: #f0f0f8;
+  --sidebar-foreground: #0b0b14;
+  --sidebar-accent: #e4e4f0;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --background: #0b0b14;
+  --foreground: #eeeef4;
+  --card: #12121d;
+  --card-foreground: #eeeef4;
+  --primary: #4f84ff;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a28;
+  --secondary-foreground: #c8c8da;
+  --muted: #1a1a28;
+  --muted-foreground: #6b6b8a;
+  --accent: #3dd68c;
+  --accent-foreground: #0b0b14;
+  --destructive: #e84040;
+  --border: rgba(255, 255, 255, 0.07);
+  --ring: rgba(79, 132, 255, 0.5);
+  --sidebar: #0e0e19;
+  --sidebar-foreground: #eeeef4;
+  --sidebar-accent: #1a1a28;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+}

@@ -1,7 +1,74 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import Layout from '../components/Layout'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
+
+const mockCommitActivity = [
+  { month: 'Jan', count: 12 },
+  { month: 'Feb', count: 8 },
+  { month: 'Mar', count: 23 },
+  { month: 'Apr', count: 15 },
+  { month: 'May', count: 31 },
+  { month: 'Jun', count: 19 },
+  { month: 'Jul', count: 28 },
+  { month: 'Aug', count: 42 },
+  { month: 'Sep', count: 35 },
+  { month: 'Oct', count: 18 },
+  { month: 'Nov', count: 27 },
+  { month: 'Dec', count: 14 },
+]
+
+
+function StatsSection() {
+  const maxCount = Math.max(...mockCommitActivity.map((d) => d.count))
+  const totalCommits = mockCommitActivity.reduce((s, d) => s + d.count, 0)
+
+  return (
+    <section className="flex flex-col gap-6 pb-10 border-b border-border">
+      {/* 요약 수치 */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: '등록 레포', value: '3' },
+          { label: '총 커밋', value: totalCommits.toLocaleString() },
+          { label: '사용 언어', value: '5개' },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-card border border-border rounded-xl p-5">
+            <p className="text-muted-foreground text-sm mb-1">{label}</p>
+            <p className="text-foreground text-2xl font-bold tracking-tight">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* 커밋 활동 */}
+      <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
+        <p className="text-foreground font-semibold">커밋 활동</p>
+        <div className="flex items-end gap-1.5">
+          {mockCommitActivity.map((d) => {
+            const barH = Math.round((d.count / maxCount) * 120)
+            return (
+              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-muted-foreground font-mono" style={{ fontSize: '10px' }}>{d.count}</span>
+                <div
+                  className="w-full rounded-t-sm"
+                  style={{
+                    height: `${barH}px`,
+                    backgroundColor: 'var(--brand-primary)',
+                    opacity: 0.25 + (d.count / maxCount) * 0.75,
+                  }}
+                />
+                <span className="text-muted-foreground font-mono" style={{ fontSize: '9px' }}>{d.month}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
 
 const mockRepos = [
   {
@@ -51,121 +118,170 @@ const mockRepos = [
   },
 ]
 
-function RepoCard({ repo, isPublic, onTogglePublic }) {
+function PublicSwitch({ isPublic, onToggle }) {
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="flex items-center gap-2 shrink-0"
+    >
+      <span className="text-xs text-muted-foreground">private</span>
+      <Switch checked={isPublic} onCheckedChange={onToggle} />
+      <span className={`text-xs font-medium transition-colors ${isPublic ? 'text-primary' : 'text-muted-foreground'}`}>
+        public
+      </span>
+    </div>
+  )
+}
+
+function FeaturedRepoCard({ repo, isPublic, onTogglePublic }) {
   const navigate = useNavigate()
 
   return (
     <div
       onClick={() => navigate(`/repo/${repo.id}`)}
-      className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 cursor-pointer hover:border-primary/40 transition-colors"
+      className="bg-card border border-border rounded-xl p-6 cursor-pointer hover:border-primary/40 transition-colors duration-150"
     >
-      {/* 헤더 */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-secondary shrink-0" />
+          <div className="w-9 h-9 rounded-full bg-secondary shrink-0" />
           <div>
-            <p className="text-foreground font-medium text-sm">{repo.name}</p>
-            {repo.subtitle && <p className="text-muted-foreground text-xs mt-0.5">{repo.subtitle}</p>}
+            <p className="text-foreground font-bold text-lg tracking-tight">{repo.name}</p>
+            {repo.subtitle && <p className="text-muted-foreground text-sm mt-0.5">{repo.subtitle}</p>}
           </div>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onTogglePublic() }}
-          className="shrink-0 flex items-center gap-1.5"
-        >
-          <span className={`text-xs transition-colors ${isPublic ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>private</span>
-          <div className={`relative w-9 h-5 rounded-full transition-colors ${isPublic ? 'bg-emerald-500' : 'bg-muted'}`}>
-            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${isPublic ? 'left-[18px]' : 'left-0.5'}`} />
+        <PublicSwitch isPublic={isPublic} onToggle={onTogglePublic} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 flex flex-col gap-4">
+          <p className="text-foreground text-sm leading-relaxed">{repo.aiSummary}</p>
+          <div className="flex gap-1.5 flex-wrap">
+            {repo.techStack.map((t) => (
+              <Badge key={t} variant="secondary">{t}</Badge>
+            ))}
           </div>
-          <span className={`text-xs transition-colors ${isPublic ? 'text-emerald-400 font-medium' : 'text-muted-foreground'}`}>public</span>
-        </button>
-      </div>
-
-      {/* AI 요약 */}
-      <div className="border-t border-border pt-3">
-        <p className="text-muted-foreground text-xs mb-1">AI 프로젝트 요약</p>
-        <p className="text-foreground text-xs leading-relaxed line-clamp-2">{repo.aiSummary}</p>
-      </div>
-
-      {/* 기술 스택 */}
-      <div className="border-t border-border pt-3">
-        <p className="text-muted-foreground text-xs mb-2">기술 스택</p>
-        <div className="flex gap-1 flex-wrap">
-          {repo.techStack.map((t) => (
-            <span key={t} className="text-xs px-2 py-0.5 bg-secondary border border-border rounded-full text-muted-foreground">
-              {t}
-            </span>
-          ))}
         </div>
-      </div>
 
-      {/* 타임라인 */}
-      <div className="border-t border-border pt-3">
-        <p className="text-muted-foreground text-xs mb-2">타임라인</p>
-        <ul className="flex flex-col gap-1">
-          {repo.timeline.map((a) => (
-            <li key={a.title} className="flex items-center gap-2 text-xs">
-              <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
-              <span className="text-foreground">{a.title}</span>
-              <span className="text-muted-foreground font-mono ml-auto shrink-0">{a.period}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 기여 목록 */}
-      <div className="border-t border-border pt-3">
-        <p className="text-muted-foreground text-xs mb-2">기여 목록</p>
-        <ul className="flex flex-col gap-1">
-          {repo.contributions.map((c) => (
-            <li key={c} className="flex items-start gap-2 text-xs">
-              <span className="mt-1 w-1 h-1 rounded-full bg-primary shrink-0" />
-              <span className="text-foreground">{c}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 푸터 */}
-      <div className="border-t border-border pt-3 flex items-center justify-end">
-        <p className="text-muted-foreground text-xs">마지막 업데이트 {repo.lastUpdated}</p>
+        <div className="md:border-l md:border-border md:pl-6 flex flex-col justify-between gap-3">
+          <ul className="flex flex-col gap-2">
+            {repo.timeline.map((a) => (
+              <li key={a.title} className="flex items-start gap-2">
+                <span className="mt-1.5 w-1 h-1 rounded-full bg-primary shrink-0" />
+                <span className="text-foreground text-sm leading-snug">{a.title}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-muted-foreground text-sm">업데이트 {repo.lastUpdated}</p>
+        </div>
       </div>
     </div>
   )
 }
 
+function CompactRepoCard({ repo, isPublic, onTogglePublic }) {
+  const navigate = useNavigate()
+
+  return (
+    <div
+      onClick={() => navigate(`/repo/${repo.id}`)}
+      className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3 cursor-pointer hover:border-primary/40 transition-colors duration-150"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-secondary shrink-0" />
+          <div>
+            <p className="text-foreground font-semibold text-base">{repo.name}</p>
+            {repo.subtitle && <p className="text-muted-foreground text-sm mt-0.5">{repo.subtitle}</p>}
+          </div>
+        </div>
+        <PublicSwitch isPublic={isPublic} onToggle={onTogglePublic} />
+      </div>
+
+      <p className="text-foreground text-sm leading-relaxed line-clamp-2">{repo.aiSummary}</p>
+
+      <div className="flex gap-1.5 flex-wrap">
+        {repo.techStack.slice(0, 3).map((t) => (
+          <Badge key={t} variant="secondary">{t}</Badge>
+        ))}
+        {repo.techStack.length > 3 && (
+          <span className="text-sm text-muted-foreground">+{repo.techStack.length - 3}</span>
+        )}
+      </div>
+
+      <Separator />
+      <p className="text-muted-foreground text-sm">업데이트 {repo.lastUpdated}</p>
+    </div>
+  )
+}
+
 export default function Dashboard() {
+  const location = useLocation()
   const [publicMap, setPublicMap] = useState(() =>
     Object.fromEntries(mockRepos.map((r) => [r.id, true]))
   )
+  const statsRef = useRef(null)
+
+  useEffect(() => {
+    const target = location.state?.scrollTo
+    if (!target) return
+    requestAnimationFrame(() => {
+      if (target === 'repos') {
+        const el = document.getElementById('repos-section')
+        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' })
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    const el = statsRef.current
+    if (!el) return
+    // stats 섹션이 화면 위로 사라지면(scrolled past) → teal, 다시 보이면 → gray
+    const observer = new IntersectionObserver(
+      ([entry]) => window.dispatchEvent(new CustomEvent('repos-visibility', { detail: !entry.isIntersecting })),
+      { threshold: 0, rootMargin: '-56px 0px 0px 0px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   function togglePublic(id) {
     setPublicMap((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
+  const [featured, ...rest] = mockRepos
+
   return (
     <Layout>
-      <div className="p-8 flex flex-col gap-8">
+      <div className="py-8 flex flex-col gap-8">
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">대시보드</h2>
-            <p className="text-muted-foreground text-sm mt-1">등록된 레포지토리를 확인하세요</p>
-          </div>
-          <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+        <div ref={statsRef} id="stats-section"><StatsSection /></div>
+
+        <div id="repos-section" className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-foreground tracking-tight">레포지토리</h2>
+          <Button>
             <Plus className="w-4 h-4" />
-            레포지토리 등록
-          </button>
+            등록
+          </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-5">
-          {mockRepos.map((repo) => (
-            <RepoCard
-              key={repo.id}
-              repo={repo}
-              isPublic={publicMap[repo.id]}
-              onTogglePublic={() => togglePublic(repo.id)}
-            />
-          ))}
+        <div className="flex flex-col gap-5">
+          <FeaturedRepoCard
+            repo={featured}
+            isPublic={publicMap[featured.id]}
+            onTogglePublic={() => togglePublic(featured.id)}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {rest.map((repo) => (
+              <CompactRepoCard
+                key={repo.id}
+                repo={repo}
+                isPublic={publicMap[repo.id]}
+                onTogglePublic={() => togglePublic(repo.id)}
+              />
+            ))}
+          </div>
         </div>
 
       </div>

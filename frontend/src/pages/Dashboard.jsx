@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Plus, Star, GitFork, Lock, Globe } from 'lucide-react'
+import { Plus, Star, GitFork, Lock, Globe, EyeOff } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,20 @@ const mockCommitActivity = [
   { month: 'Dec', count: 14 },
 ]
 
+
+const mockMessageStats = {
+  total: 272,
+  singleWord: 104,
+  vaguePattern: 65,
+  avgWords: 2.1,
+  avgChars: 12.4,
+}
+
+const mockRepoContributions = [
+  { name: 'ml-pipeline',    commits: 193, pct: 71 },
+  { name: 'data-crawler',   commits: 52,  pct: 19 },
+  { name: 'fastapi-server', commits: 27,  pct: 10 },
+]
 
 const mockLangStats = [
   { lang: 'Python',     pct: 45 },
@@ -137,6 +151,134 @@ function StatsSection() {
         <p className="text-foreground font-semibold mb-4">사용 언어</p>
         <DonutChart data={mockLangStats} />
       </div>
+
+      </div>
+    </section>
+  )
+}
+
+function InsightsSection() {
+  const total = mockCommitActivity.reduce((s, d) => s + d.count, 0)
+  const avg = total / mockCommitActivity.length
+  const weakMonths = mockCommitActivity
+    .filter((d) => d.count < avg * 0.7)
+    .map((d) => ({ ...d, reductionPct: Math.round((1 - d.count / avg) * 100) }))
+
+  const singleWordPct  = Math.round((mockMessageStats.singleWord   / mockMessageStats.total) * 100)
+  const vaguePatternPct = Math.round((mockMessageStats.vaguePattern / mockMessageStats.total) * 100)
+
+  const topRepo = mockRepoContributions[0]
+
+  return (
+    <section className="flex flex-col gap-4 pb-10 border-b border-border">
+      <div className="flex items-center gap-2">
+        <EyeOff className="w-4 h-4 text-muted-foreground" />
+        <p className="text-foreground font-semibold">개인 인사이트</p>
+        <span className="text-xs text-muted-foreground">· 본인에게만 표시됩니다</span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 items-start">
+
+        {/* 1. 취약 시기 감지 */}
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+            <p className="text-foreground font-medium text-sm">취약 시기 감지</p>
+          </div>
+          {weakMonths.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-1.5">
+                {weakMonths.map((m) => (
+                  <div key={m.month} className="bg-secondary rounded-lg px-4 py-2.5 flex items-center justify-between gap-4">
+                    <span className="text-foreground text-sm font-semibold">{m.month}</span>
+                    <span className="text-muted-foreground text-sm">{m.count}커밋</span>
+                    <span className="text-orange-400 text-sm font-semibold ml-auto">평균 대비 {m.reductionPct}% 적음</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                이 시기에 왜 개발량이 줄었는지 회고해보세요. 슬럼프였는지, 비개발 업무에 집중했는지 파악하면 앞으로의 사이클을 예측하는 데 도움이 됩니다.
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">뚜렷한 취약 시기가 감지되지 않았습니다.</p>
+          )}
+        </div>
+
+        {/* 2. 커밋 메시지 품질 */}
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-yellow-400 shrink-0" />
+            <p className="text-foreground font-medium text-sm">커밋 메시지 품질</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">단어 1개 이하 메시지</span>
+                  <span className="text-sm font-semibold text-yellow-400">{singleWordPct}%</span>
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                  <div className="h-full bg-yellow-400 rounded-full transition-all" style={{ width: `${singleWordPct}%` }} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">모호한 키워드만 포함</span>
+                  <span className="text-sm font-semibold text-orange-400">{vaguePatternPct}%</span>
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                  <div className="h-full bg-orange-400 rounded-full transition-all" style={{ width: `${vaguePatternPct}%` }} />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-5 text-xs text-muted-foreground">
+              <span>평균 단어 수 <span className="text-foreground font-medium">{mockMessageStats.avgWords}개</span></span>
+              <span>평균 글자 수 <span className="text-foreground font-medium">{mockMessageStats.avgChars}자</span></span>
+              <span>분석 커밋 <span className="text-foreground font-medium">{mockMessageStats.total.toLocaleString()}개</span></span>
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            전체 커밋의 {singleWordPct}%가 단어 1개 이하입니다.{' '}
+            <span className="font-mono text-xs bg-secondary px-1.5 py-0.5 rounded">fix</span>{' '}
+            <span className="font-mono text-xs bg-secondary px-1.5 py-0.5 rounded">update</span>{' '}
+            <span className="font-mono text-xs bg-secondary px-1.5 py-0.5 rounded">수정</span> 같은 메시지는 나중에 스스로도 어떤 작업인지 알아보기 어렵습니다. 변경 의도와 맥락을 담아서 쓰세요.
+          </p>
+        </div>
+
+        {/* 4. 기여 편향 분석 */}
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+            <p className="text-foreground font-medium text-sm">기여 편향 분석</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            {mockRepoContributions.map((r) => (
+              <div key={r.name} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-mono text-foreground">{r.name}</span>
+                  <span className="text-sm text-muted-foreground">{r.pct}% · {r.commits}커밋</span>
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${r.pct}%`, opacity: 0.35 + (r.pct / 100) * 0.65 }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-foreground text-sm">
+              전체 커밋의{' '}
+              <span className="font-semibold text-primary">{topRepo.pct}%</span>가{' '}
+              <span className="font-mono text-xs bg-secondary px-1.5 py-0.5 rounded">{topRepo.name}</span>에 집중되어 있습니다.
+            </p>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              하나의 프로젝트를 깊게 파고든 흔적입니다. 다만 포트폴리오 관점에서 다양한 도메인과 기술 스택을 보여주기에는 다소 단조롭게 보일 수 있습니다. 사이드 프로젝트나 다른 도메인 실험을 추가하는 것도 고려해보세요.
+            </p>
+          </div>
+        </div>
 
       </div>
     </section>
@@ -467,6 +609,8 @@ export default function Dashboard() {
       <div className="py-8 flex flex-col gap-8 max-w-4xl mx-auto">
 
         <div ref={statsRef} id="stats-section"><StatsSection /></div>
+
+        <InsightsSection />
 
         <div id="repos-section" className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground tracking-tight">레포지토리</h2>

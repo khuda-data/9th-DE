@@ -40,6 +40,7 @@
   { "name": "Laravel", "category": "framework", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/laravel/laravel-original.svg" },
   { "name": "Rails", "category": "framework", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/rails/rails-original-wordmark.svg" },
 
+    { "name": "SQL", "category": "language", "logo_url": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/azuresqldatabase/azuresqldatabase-original.svg" },
   { "name": "MySQL", "category": "infra", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original.svg" },
   { "name": "PostgreSQL", "category": "infra", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/postgresql/postgresql-original.svg" },
   { "name": "Redis", "category": "infra", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/redis/redis-original.svg" },
@@ -108,5 +109,7 @@
   { "name": "Unity", "category": "etc", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/unity/unity-original.svg" },
   { "name": "Unreal Engine", "category": "etc", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/unrealengine/unrealengine-original.svg" },
   { "name": "Bootstrap", "category": "etc", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/bootstrap/bootstrap-original.svg" },
-  { "name": "OpenAPI", "category": "etc", "logo_url": "https://raw.githubusercontent.com/simple-icons/simple-icons/master/icons/openapiinitiative.svg" }
+  { "name": "OpenAPI", "category": "etc", "logo_url": "https://raw.githubusercontent.com/simple-icons/simple-icons/master/icons/openapiinitiative.svg" },
+  { "name": "Airflow", "category": "etc", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/apacheairflow/apacheairflow-original.svg" },
+  { "name": "Bash", "category": "etc", "logo_url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/bash/bash-original.svg" }
 ]

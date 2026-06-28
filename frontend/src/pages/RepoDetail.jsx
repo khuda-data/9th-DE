@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import { GripVertical, ChevronDown } from 'lucide-react'
 import {
   DndContext,
@@ -26,9 +27,10 @@ import { Separator } from '@/components/ui/separator'
 
 const TABS = ['개요', '기술 스택', '타임라인', '기여 목록/근거', 'README 카드']
 
-export default function RepoDetail() {
-  const { repoId } = useParams()
+export default function RepoDetail({ isViewer = false }) {
+  const { repoId, username } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const initialSubtitle = location.state?.subtitle ?? ''
   const [activeTab, setActiveTab] = useState('개요')
   const navRef = useRef(null)
@@ -46,6 +48,15 @@ export default function RepoDetail() {
   return (
     <Layout>
       <div className="py-8 flex flex-col gap-6 max-w-4xl mx-auto">
+
+        {isViewer && (
+          <div className="flex items-center justify-between bg-secondary/60 border border-border rounded-xl px-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              <span className="text-foreground font-medium">{username}</span>의 포트폴리오 · 읽기 전용
+            </p>
+            <Button size="sm" onClick={() => navigate('/')}>내 레포 분석하기</Button>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-muted-foreground text-sm shrink-0">xihxxn /</span>
@@ -74,11 +85,11 @@ export default function RepoDetail() {
         </nav>
 
         <div>
-          {activeTab === '개요' && <OverviewTab />}
-          {activeTab === '기술 스택' && <TechStackTab />}
-          {activeTab === '타임라인' && <TimelineTab />}
+          {activeTab === '개요'          && <OverviewTab isViewer={isViewer} />}
+          {activeTab === '기술 스택'     && <TechStackTab />}
+          {activeTab === '타임라인'      && <TimelineTab isViewer={isViewer} />}
           {activeTab === '기여 목록/근거' && <ContributionTab />}
-          {activeTab === 'README 카드' && <ReadmeCardTab initialSubtitle={initialSubtitle} />}
+          {activeTab === 'README 카드'   && <ReadmeCardTab initialSubtitle={initialSubtitle} isViewer={isViewer} />}
         </div>
 
       </div>
@@ -119,7 +130,7 @@ const mockActivities = [
 
 const AI_SUMMARY = `S3 Data Lake 구조를 직접 설계하고 GitHub API 기반 수집 파이프라인을 구현했습니다. Airflow DAG를 작성해 수집 워크플로우를 자동화했으며, PostgreSQL 스키마를 설계하고 FastAPI와 연동하는 전체 백엔드 흐름을 구축했습니다.`
 
-function OverviewTab() {
+function OverviewTab({ isViewer = false }) {
   const mdContent = `# ml-pipeline\n\n## AI 프로젝트 요약\n${AI_SUMMARY}\n\n## 주요 활동\n${mockActivities.map((a) => `- ${a.title} (${a.period})`).join('\n')}\n\n## 느낀점\n${mockActivities.map((a) => a.note ? `### ${a.title}\n${a.note}` : '').filter(Boolean).join('\n\n') || '(타임라인에서 기록한 개인 노트가 여기 포함됩니다)'}`
   const [copied, setCopied] = useState(false)
 
@@ -166,14 +177,27 @@ function OverviewTab() {
           <p className="text-muted-foreground text-sm mt-1">AI 요약 + 주요 활동 + 느낀점이 포함된 마크다운 파일</p>
         </div>
         <div className="bg-secondary rounded-lg p-5 overflow-y-auto" style={{ height: '420px' }}>
-          <pre className="text-foreground text-sm font-mono whitespace-pre-wrap leading-relaxed">{mdContent}</pre>
+          {isViewer ? (
+            <div className="prose prose-sm max-w-none text-foreground
+              [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h1]:mt-0
+              [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-4
+              [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mb-1 [&_h3]:mt-3
+              [&_p]:text-sm [&_p]:leading-relaxed [&_p]:mb-2
+              [&_ul]:pl-4 [&_li]:text-sm [&_li]:mb-1 [&_li]:list-disc">
+              <ReactMarkdown>{mdContent}</ReactMarkdown>
+            </div>
+          ) : (
+            <pre className="text-foreground text-sm font-mono whitespace-pre-wrap leading-relaxed">{mdContent}</pre>
+          )}
         </div>
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={handleDownload}>Markdown으로 내려받기</Button>
-          <Button variant="secondary" className="flex-1" onClick={handleCopy}>
-            {copied ? '복사됨 ✓' : '복사하기'}
-          </Button>
-        </div>
+        {!isViewer && (
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={handleDownload}>Markdown으로 내려받기</Button>
+            <Button variant="secondary" className="flex-1" onClick={handleCopy}>
+              {copied ? '복사됨 ✓' : '복사하기'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -271,7 +295,7 @@ function TechStackTab() {
   )
 }
 
-function TimelineTab() {
+function TimelineTab({ isViewer = false }) {
   const [notes, setNotes] = useState(() =>
     Object.fromEntries(mockActivities.map((a) => [a.id, a.note]))
   )
@@ -294,12 +318,18 @@ function TimelineTab() {
             </div>
             <Separator className="my-3" />
             <p className="text-muted-foreground text-sm mb-1.5">개인 노트</p>
-            <Textarea
-              value={notes[activity.id]}
-              onChange={(e) => setNotes((prev) => ({ ...prev, [activity.id]: e.target.value }))}
-              placeholder="이 활동에 대한 느낀점, 배운 점 등을 기록하세요..."
-              className="min-h-[56px] max-h-[420px] text-sm resize-none overflow-y-auto"
-            />
+            {isViewer ? (
+              notes[activity.id]
+                ? <p className="text-foreground text-sm leading-relaxed">{notes[activity.id]}</p>
+                : <p className="text-muted-foreground text-sm italic">작성된 노트가 없어요.</p>
+            ) : (
+              <Textarea
+                value={notes[activity.id]}
+                onChange={(e) => setNotes((prev) => ({ ...prev, [activity.id]: e.target.value }))}
+                placeholder="이 활동에 대한 느낀점, 배운 점 등을 기록하세요..."
+                className="min-h-[56px] max-h-[420px] text-sm resize-none overflow-y-auto"
+              />
+            )}
           </div>
         </div>
       ))}
@@ -479,7 +509,7 @@ function SectionLabel({ id, label }) {
   )
 }
 
-function ReadmeCardTab({ initialSubtitle = '' }) {
+function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
   const [sections, setSections] = useState(DEFAULT_SECTIONS)
   const [subtitle, setSubtitle] = useState(initialSubtitle)
   const [copied, setCopied] = useState(false)
@@ -512,9 +542,9 @@ function ReadmeCardTab({ initialSubtitle = '' }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 gap-6 ${!isViewer ? 'lg:grid-cols-2' : ''}`}>
 
-        <div className="flex flex-col gap-4">
+        {!isViewer && <div className="flex flex-col gap-4">
           <p className="text-foreground font-semibold text-sm">카드 구성</p>
 
           <div className="flex flex-col gap-1.5">
@@ -541,7 +571,7 @@ function ReadmeCardTab({ initialSubtitle = '' }) {
               </SortableContext>
             </DndContext>
           </div>
-        </div>
+        </div>}
 
         <div className="flex flex-col gap-2">
           <p className="text-foreground font-semibold text-sm">카드 미리보기</p>
@@ -634,18 +664,20 @@ function ReadmeCardTab({ initialSubtitle = '' }) {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
-        <div>
-          <p className="text-foreground font-semibold text-sm">카드 Markdown 추출</p>
-          <p className="text-muted-foreground text-sm mt-0.5">위 카드 구성 기준으로 추출</p>
+      {!isViewer && (
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <div>
+            <p className="text-foreground font-semibold text-sm">카드 Markdown 추출</p>
+            <p className="text-muted-foreground text-sm mt-0.5">위 카드 구성 기준으로 추출</p>
+          </div>
+          <div className="bg-secondary rounded-lg p-3">
+            <p className="text-muted-foreground text-xs font-mono">{cardMarkdown}</p>
+          </div>
+          <Button className="w-full" onClick={handleCopy}>
+            {copied ? '복사됨 ✓' : '카드 Markdown 복사'}
+          </Button>
         </div>
-        <div className="bg-secondary rounded-lg p-3">
-          <p className="text-muted-foreground text-xs font-mono">{cardMarkdown}</p>
-        </div>
-        <Button className="w-full" onClick={handleCopy}>
-          {copied ? '복사됨 ✓' : '카드 Markdown 복사'}
-        </Button>
-      </div>
+      )}
     </div>
   )
 }

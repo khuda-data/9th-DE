@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Sun, Moon } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Sun, Moon, LogOut } from 'lucide-react'
 import { useTheme } from '../store/theme'
+import { useAuth } from '../store/auth'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 function GithubIcon({ className }) {
   return (
@@ -22,6 +30,7 @@ function scrollToSection(id, offset = 64) {
 
 export default function Layout({ children }) {
   const { theme, toggle } = useTheme()
+  const { user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [reposVisible, setReposVisible] = useState(false)
@@ -47,6 +56,11 @@ export default function Layout({ children }) {
     } else {
       navigate('/dashboard', { state: { scrollTo: 'repos' } })
     }
+  }
+
+  function handleLogout() {
+    logout()
+    navigate('/')
   }
 
   return (
@@ -85,12 +99,37 @@ export default function Layout({ children }) {
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                <GithubIcon className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-              <span className="text-sm text-foreground font-medium">xihxxn</span>
-            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-secondary/60 transition-colors duration-150">
+                  <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
+                    {user?.avatar_url
+                      ? <img src={user.avatar_url} alt={user.login} className="w-full h-full object-cover" />
+                      : <GithubIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                    }
+                  </div>
+                  <span className="text-sm text-foreground font-medium">{user?.login ?? 'guest'}</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                {user?.name && (
+                  <>
+                    <div className="px-2 py-1.5">
+                      <p className="text-xs text-muted-foreground">{user.name}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-destructive focus:text-destructive gap-2 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  로그아웃
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

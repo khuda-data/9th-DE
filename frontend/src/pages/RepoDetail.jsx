@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, ChevronDown } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -16,41 +16,59 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import Layout from '../components/Layout'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 
 const TABS = ['개요', '기술 스택', '타임라인', '기여 목록/근거', 'README 카드']
 
 export default function RepoDetail() {
   const { repoId } = useParams()
   const [activeTab, setActiveTab] = useState('개요')
+  const navRef = useRef(null)
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+
+  useEffect(() => { window.scrollTo(0, 0) }, [])
+
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const btn = nav.querySelector('[data-active="true"]')
+    if (btn) setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth })
+  }, [activeTab])
 
   return (
     <Layout>
-      <div className="p-8 flex flex-col gap-6">
+      <div className="py-8 flex flex-col gap-6">
 
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-muted-foreground text-sm">xihxxn /</p>
-            <h2 className="text-2xl font-bold text-foreground">ml-pipeline</h2>
-            <p className="text-muted-foreground text-sm mt-1">머신러닝 파이프라인 프로젝트</p>
-          </div>
-          <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">분석 완료</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-muted-foreground text-sm shrink-0">xihxxn /</span>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight truncate">ml-pipeline</h2>
         </div>
 
-        <div className="flex gap-1 border-b border-border">
+        <nav ref={navRef} className="relative flex items-center gap-1 overflow-x-auto">
+          <div
+            className="absolute inset-y-0 rounded-md bg-primary/15 transition-all duration-200 ease-out"
+            style={{ left: indicator.left, width: indicator.width }}
+          />
           {TABS.map((tab) => (
             <button
               key={tab}
+              data-active={activeTab === tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              className={`relative z-10 px-3 py-1.5 rounded-md text-sm whitespace-nowrap transition-colors duration-150 ${
                 activeTab === tab
-                  ? 'text-foreground border-primary'
-                  : 'text-muted-foreground border-transparent hover:text-foreground'
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {tab}
             </button>
           ))}
-        </div>
+        </nav>
 
         <div>
           {activeTab === '개요' && <OverviewTab />}
@@ -99,55 +117,39 @@ const mockActivities = [
 const AI_SUMMARY = `S3 Data Lake 구조를 직접 설계하고 GitHub API 기반 수집 파이프라인을 구현했습니다. Airflow DAG를 작성해 수집 워크플로우를 자동화했으며, PostgreSQL 스키마를 설계하고 FastAPI와 연동하는 전체 백엔드 흐름을 구축했습니다.`
 
 function OverviewTab() {
-  const mdContent = `# ml-pipeline
-
-## AI 프로젝트 요약
-${AI_SUMMARY}
-
-## 주요 활동
-${mockActivities.map((a) => `- ${a.title} (${a.period})`).join('\n')}
-
-## 느낀점
-${mockActivities.map((a) => a.note ? `### ${a.title}\n${a.note}` : '').filter(Boolean).join('\n\n') || '(타임라인에서 기록한 개인 노트가 여기 포함됩니다)'}`
+  const mdContent = `# ml-pipeline\n\n## AI 프로젝트 요약\n${AI_SUMMARY}\n\n## 주요 활동\n${mockActivities.map((a) => `- ${a.title} (${a.period})`).join('\n')}\n\n## 느낀점\n${mockActivities.map((a) => a.note ? `### ${a.title}\n${a.note}` : '').filter(Boolean).join('\n\n') || '(타임라인에서 기록한 개인 노트가 여기 포함됩니다)'}`
 
   return (
     <div className="flex flex-col gap-5">
-
-      {/* AI 요약 */}
       <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-2 mb-3">
           <p className="text-foreground font-semibold">AI 프로젝트 요약</p>
-          <span className="text-xs text-muted-foreground border border-border rounded px-1.5 py-0.5 bg-secondary">기여 근거 기반</span>
+          <Badge variant="secondary">기여 근거 기반</Badge>
         </div>
         <p className="text-foreground text-sm leading-relaxed mb-4">{AI_SUMMARY}</p>
-        <div className="border-t border-border pt-4">
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide mb-3">주요 활동 목록</p>
-          <ul className="flex flex-col gap-2">
-            {mockActivities.map((a) => (
-              <li key={a.id} className="flex items-center gap-3 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                <span className="text-foreground">{a.title}</span>
-                <span className="text-muted-foreground font-mono text-xs ml-auto shrink-0">{a.period}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Separator className="mb-4" />
+        <p className="text-muted-foreground text-sm font-medium mb-3">주요 활동 목록</p>
+        <ul className="flex flex-col gap-2">
+          {mockActivities.map((a) => (
+            <li key={a.id} className="flex items-center gap-3 text-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+              <span className="text-foreground">{a.title}</span>
+              <span className="text-muted-foreground font-mono text-xs ml-auto shrink-0">{a.period}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {/* MD 추출 */}
       <div className="bg-card border border-border rounded-xl p-6 flex flex-col gap-4">
         <div>
           <p className="text-foreground font-semibold">전체 문서 MD 추출</p>
-          <p className="text-muted-foreground text-xs mt-1">AI 요약 + 주요 활동 + 느낀점이 포함된 마크다운 파일</p>
+          <p className="text-muted-foreground text-sm mt-1">AI 요약 + 주요 활동 + 느낀점이 포함된 마크다운 파일</p>
         </div>
         <div className="bg-secondary rounded-lg p-4 max-h-48 overflow-y-auto">
           <pre className="text-muted-foreground text-xs font-mono whitespace-pre-wrap">{mdContent}</pre>
         </div>
-        <button className="w-full bg-primary text-primary-foreground text-sm py-2.5 rounded-lg hover:bg-primary/90 transition-colors font-medium">
-          MD 파일 다운로드
-        </button>
+        <Button className="w-full">Markdown으로 내려받기</Button>
       </div>
-
     </div>
   )
 }
@@ -163,42 +165,36 @@ const TECH_STACKS = [
   { name: 'AWS S3', category: '인프라', pct: null },
 ]
 
-const CATEGORY_COLOR = {
-  '언어': 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-  '프레임워크': 'text-violet-400 bg-violet-400/10 border-violet-400/20',
-  '데이터베이스': 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-  '인프라': 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+
+function getTealShades(count) {
+  // #14B8A6 ≈ hsl(173, 80%, 40%) → 점점 연해짐
+  return Array.from({ length: count }, (_, i) => {
+    const l = 40 + (i * 30) / Math.max(count - 1, 1)
+    return `hsl(173, 70%, ${l}%)`
+  })
 }
 
 function TechStackTab() {
   const languages = TECH_STACKS.filter((s) => s.pct !== null)
   const others = TECH_STACKS.filter((s) => s.pct === null)
+  const shades = getTealShades(languages.length)
 
   return (
     <div className="flex flex-col gap-5">
-
-      {/* 언어 비중 */}
       <div className="bg-card border border-border rounded-xl p-6">
         <p className="text-foreground font-semibold mb-4">언어 비중</p>
         <div className="flex h-2 rounded-full overflow-hidden gap-0.5 mb-4">
-          {languages.map((l) => (
-            <div
-              key={l.name}
-              style={{ width: `${l.pct}%` }}
-              className={`${l.name === 'Python' ? 'bg-blue-400' : l.name === 'SQL' ? 'bg-pink-400' : 'bg-slate-400'}`}
-            />
+          {languages.map((l, i) => (
+            <div key={l.name} style={{ width: `${l.pct}%`, backgroundColor: shades[i] }} />
           ))}
         </div>
         <div className="flex flex-col gap-2">
-          {languages.map((l) => (
+          {languages.map((l, i) => (
             <div key={l.name} className="flex items-center gap-3">
-              <div className="w-5 h-5 rounded bg-muted shrink-0" />
+              <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: shades[i] }} />
               <span className="text-sm text-foreground w-20">{l.name}</span>
               <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${l.name === 'Python' ? 'bg-blue-400' : l.name === 'SQL' ? 'bg-pink-400' : 'bg-slate-400'}`}
-                  style={{ width: `${l.pct}%` }}
-                />
+                <div className="h-full rounded-full" style={{ width: `${l.pct}%`, backgroundColor: shades[i] }} />
               </div>
               <span className="text-muted-foreground text-xs font-mono w-8 text-right">{l.pct}%</span>
             </div>
@@ -206,7 +202,6 @@ function TechStackTab() {
         </div>
       </div>
 
-      {/* 프레임워크 / 툴 */}
       <div className="bg-card border border-border rounded-xl p-6">
         <p className="text-foreground font-semibold mb-4">프레임워크 / 툴</p>
         <div className="flex flex-wrap gap-2">
@@ -214,14 +209,10 @@ function TechStackTab() {
             <div key={s.name} className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2">
               <div className="w-5 h-5 rounded bg-muted shrink-0" />
               <span className="text-sm text-foreground">{s.name}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded border ${CATEGORY_COLOR[s.category]}`}>
-                {s.category}
-              </span>
             </div>
           ))}
         </div>
       </div>
-
     </div>
   )
 }
@@ -243,19 +234,18 @@ function TimelineTab() {
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-col gap-0.5">
                 <p className="text-foreground text-sm font-medium">{activity.title}</p>
-                <p className="text-muted-foreground text-xs">{activity.desc}</p>
+                <p className="text-muted-foreground text-sm">{activity.desc}</p>
               </div>
               <span className="text-muted-foreground text-xs font-mono shrink-0">{activity.period}</span>
             </div>
-            <div className="mt-3 pt-3 border-t border-border">
-              <p className="text-muted-foreground text-xs mb-1.5">개인 노트</p>
-              <textarea
-                value={notes[activity.id]}
-                onChange={(e) => setNotes((prev) => ({ ...prev, [activity.id]: e.target.value }))}
-                placeholder="이 활동에 대한 느낀점, 배운 점 등을 기록하세요..."
-                className="w-full bg-secondary text-foreground text-xs rounded-lg px-3 py-2 resize-none placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring min-h-[56px]"
-              />
-            </div>
+            <Separator className="my-3" />
+            <p className="text-muted-foreground text-sm mb-1.5">개인 노트</p>
+            <Textarea
+              value={notes[activity.id]}
+              onChange={(e) => setNotes((prev) => ({ ...prev, [activity.id]: e.target.value }))}
+              placeholder="이 활동에 대한 느낀점, 배운 점 등을 기록하세요..."
+              className="min-h-[56px] text-sm resize-none"
+            />
           </div>
         </div>
       ))}
@@ -295,85 +285,92 @@ function ContributionTab() {
   const [expanded, setExpanded] = useState(null)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {mockActions.map((action) => (
         <div key={action.id} className="bg-card border border-border rounded-xl overflow-hidden">
           <button
             onClick={() => setExpanded(expanded === action.id ? null : action.id)}
-            className="w-full flex items-center justify-between p-5 text-left hover:bg-secondary transition-colors"
+            aria-expanded={expanded === action.id}
+            className="w-full flex items-center justify-between p-5 text-left hover:bg-secondary/60 transition-colors duration-150"
           >
             <div className="flex flex-col gap-1">
               <p className="text-foreground font-medium">{action.title}</p>
               <p className="text-muted-foreground text-sm">{action.summary}</p>
             </div>
-            <span className="text-muted-foreground text-xs ml-4 shrink-0">
-              {expanded === action.id ? '▲ 접기' : '▼ 펼치기'}
-            </span>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 ml-4 transition-transform duration-150 ${expanded === action.id ? 'rotate-180' : ''}`} />
           </button>
 
-          {expanded === action.id && (
-            <div className="border-t border-border p-5 flex flex-col gap-5">
-              <div>
-                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-2">커밋</p>
-                <div className="flex flex-col gap-2">
-                  {action.commits.map((c) => (
-                    <a
-                      key={c.hash}
-                      href={`https://github.com/${REPO_OWNER}/${REPO_NAME}/commit/${c.hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-between bg-secondary rounded-lg px-4 py-2 hover:bg-secondary/70 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <code className="text-xs text-muted-foreground font-mono">{c.hash}</code>
-                        <p className="text-foreground text-sm">{c.message}</p>
-                      </div>
-                      <div className="flex gap-2 text-xs shrink-0">
-                        <span className="text-emerald-400">+{c.additions}</span>
-                        <span className="text-red-400">-{c.deletions}</span>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-2">수정된 파일</p>
-                <div className="flex flex-col gap-1">
-                  {action.files.map((f) => (
-                    <div key={f} className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                      <code className="text-xs text-muted-foreground font-mono">{f}</code>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {action.prs.length > 0 && (
+          <div className={`grid transition-all duration-200 ease-out ${expanded === action.id ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+            <div className="overflow-hidden">
+              <div className="border-t border-border p-5 flex flex-col gap-5">
                 <div>
-                  <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-2">PR</p>
+                  <p className="text-muted-foreground text-sm font-medium mb-2">커밋</p>
                   <div className="flex flex-col gap-2">
-                    {action.prs.map((pr) => (
-                      <a
-                        key={pr.number}
-                        href={`https://github.com/${REPO_OWNER}/${REPO_NAME}/pull/${pr.number}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-3 bg-secondary rounded-lg px-4 py-2 hover:bg-secondary/70 transition-colors"
+                    {action.commits.map((c) => (
+                      <a key={c.hash}
+                        href={`https://github.com/${REPO_OWNER}/${REPO_NAME}/commit/${c.hash}`}
+                        target="_blank" rel="noreferrer"
+                        className="flex items-center justify-between bg-secondary rounded-lg px-4 py-2.5 hover:bg-secondary/70 transition-colors duration-150"
                       >
-                        <span className="text-muted-foreground text-xs">#{pr.number}</span>
-                        <p className="text-foreground text-sm">{pr.title}</p>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <code className="text-xs text-muted-foreground font-mono shrink-0">{c.hash}</code>
+                          <p className="text-foreground text-sm truncate">{c.message}</p>
+                        </div>
+                        <div className="flex gap-2 text-sm shrink-0 ml-3">
+                          <span className="text-success">+{c.additions}</span>
+                          <span className="text-destructive">-{c.deletions}</span>
+                        </div>
                       </a>
                     ))}
                   </div>
                 </div>
-              )}
+
+                <div>
+                  <p className="text-muted-foreground text-sm font-medium mb-2">수정된 파일</p>
+                  <div className="flex flex-col gap-1.5">
+                    {action.files.map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                        <code className="text-xs text-muted-foreground font-mono">{f}</code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {action.prs.length > 0 && (
+                  <div>
+                    <p className="text-muted-foreground text-sm font-medium mb-2">PR</p>
+                    <div className="flex flex-col gap-2">
+                      {action.prs.map((pr) => (
+                        <a key={pr.number}
+                          href={`https://github.com/${REPO_OWNER}/${REPO_NAME}/pull/${pr.number}`}
+                          target="_blank" rel="noreferrer"
+                          className="flex items-center gap-3 bg-secondary rounded-lg px-4 py-2.5 hover:bg-secondary/70 transition-colors duration-150"
+                        >
+                          <span className="text-muted-foreground text-xs font-mono">#{pr.number}</span>
+                          <p className="text-foreground text-sm">{pr.title}</p>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       ))}
     </div>
   )
+}
+
+
+const SECTION_COLORS = {
+  ai_summary:           { bg: '#D8F9FD', text: '#418FAF' },
+  techstack:            { bg: '#DEEAFC', text: '#3762E3' },
+  timeline:             { bg: '#F1E9FD', text: '#883AE2' },
+  timeline_memo:        { bg: '#F9E8F3', text: '#CA3B76' },
+  contributions:        { bg: '#E2FBE9', text: '#4CA154' },
+  contribution_evidence:{ bg: '#FCEED8', text: '#D9622B' },
 }
 
 const DEFAULT_SECTIONS = [
@@ -391,32 +388,46 @@ function SortableSection({ section, onToggle }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
   }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 border transition-colors ${
+    <div ref={setNodeRef} style={style}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 border transition-colors duration-150 ${
         section.on ? 'border-border bg-secondary' : 'border-transparent opacity-50'
       }`}
     >
-      <button
-        onClick={() => onToggle(section.id)}
-        className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${section.on ? 'bg-primary' : 'bg-muted'}`}
-      >
-        <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${section.on ? 'left-4' : 'left-0.5'}`} />
-      </button>
+      <Switch
+        checked={section.on}
+        onCheckedChange={() => onToggle(section.id)}
+        aria-label={`${section.label} 표시 여부`}
+      />
       <span className="text-sm text-foreground flex-1">{section.label}</span>
-      <button
-        {...listeners}
-        {...attributes}
+      <button {...listeners} {...attributes}
         className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing p-0.5 touch-none shrink-0"
+        aria-label="드래그하여 순서 변경"
       >
         <GripVertical className="w-4 h-4" />
       </button>
     </div>
+  )
+}
+
+function SectionLabel({ id, label }) {
+  const [hovered, setHovered] = useState(false)
+  const c = SECTION_COLORS[id]
+  return (
+    <span
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="self-start inline-block text-sm font-semibold px-2.5 py-0.5 rounded-full mb-2 cursor-default transition-colors duration-150"
+      style={hovered
+        ? { backgroundColor: c.text, color: '#ffffff' }
+        : { backgroundColor: c.bg, color: c.text }
+      }
+    >
+      {label}
+    </span>
   )
 }
 
@@ -444,28 +455,25 @@ function ReadmeCardTab() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-6">
-        <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div className="flex flex-col gap-4">
           <p className="text-foreground font-semibold text-sm">카드 구성</p>
 
-          {/* 부제목 입력 */}
-          <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2">
-            <p className="text-muted-foreground text-xs">프로젝트 부제목</p>
-            <input
-              type="text"
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-muted-foreground">프로젝트 부제목</label>
+            <Input
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
               placeholder="예: ETL 파이프라인 & 데이터 인프라"
-              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
 
-          {/* 섹션 토글 */}
-          <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2">
-            <p className="text-muted-foreground text-xs mb-1">드래그로 순서 변경, 토글로 on/off</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">드래그로 순서 변경, 토글로 on/off</p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {sections.map((section) => (
                     <SortableSection key={section.id} section={section} onToggle={toggle} />
                   ))}
@@ -490,27 +498,27 @@ function ReadmeCardTab() {
               <div key={s.id} className="border-t border-border pt-3">
                 {s.id === 'ai_summary' && (
                   <div>
-                    <p className="text-muted-foreground text-xs mb-1">AI 프로젝트 요약</p>
+                    <SectionLabel id="ai_summary" label="AI 프로젝트 요약" />
                     <p className="text-foreground text-xs leading-relaxed">{AI_SUMMARY}</p>
                   </div>
                 )}
                 {s.id === 'techstack' && (
                   <div>
-                    <p className="text-muted-foreground text-xs mb-2">기술 스택</p>
+                    <SectionLabel id="techstack" label="기술 스택" />
                     <div className="flex gap-1 flex-wrap">
                       {['Python', 'FastAPI', 'Airflow'].map((t) => (
-                        <span key={t} className="text-xs px-2 py-0.5 bg-secondary border border-border rounded-full text-muted-foreground">{t}</span>
+                        <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-secondary text-foreground">{t}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {s.id === 'timeline' && (
                   <div>
-                    <p className="text-muted-foreground text-xs mb-2">타임라인</p>
+                    <SectionLabel id="timeline" label="타임라인" />
                     <ul className="flex flex-col gap-1">
                       {mockActivities.map((a) => (
                         <li key={a.id} className="flex items-center gap-2 text-xs">
-                          <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
+                          <span className="w-1 h-1 rounded-full bg-muted-foreground shrink-0" />
                           <span className="text-foreground">{a.title}</span>
                           <span className="text-muted-foreground font-mono ml-auto shrink-0">{a.period}</span>
                         </li>
@@ -523,7 +531,7 @@ function ReadmeCardTab() {
                   if (withNotes.length === 0) return null
                   return (
                     <div className="flex flex-col gap-3">
-                      <p className="text-muted-foreground text-xs">타임라인 메모</p>
+                      <SectionLabel id="timeline_memo" label="타임라인 메모" />
                       {withNotes.map((a) => (
                         <div key={a.id}>
                           <p className="text-foreground text-xs font-medium mb-0.5">{a.title}</p>
@@ -535,7 +543,7 @@ function ReadmeCardTab() {
                 })()}
                 {s.id === 'contributions' && (
                   <div>
-                    <p className="text-muted-foreground text-xs mb-1">기여 목록</p>
+                    <SectionLabel id="contributions" label="기여 목록" />
                     <ul className="flex flex-col gap-0.5">
                       {['데이터 수집 파이프라인 설계', 'Airflow DAG 작성'].map((c) => (
                         <li key={c} className="text-foreground text-xs flex gap-2"><span>•</span>{c}</li>
@@ -545,7 +553,7 @@ function ReadmeCardTab() {
                 )}
                 {s.id === 'contribution_evidence' && (
                   <div>
-                    <p className="text-muted-foreground text-xs mb-1">기여 근거</p>
+                    <SectionLabel id="contribution_evidence" label="기여 근거" />
                     <p className="text-muted-foreground text-xs">커밋 a3f2c1d, b1e9d2a 외 2개 · 파일 5개 수정</p>
                   </div>
                 )}
@@ -553,7 +561,9 @@ function ReadmeCardTab() {
             ))}
 
             {activeSections.length === 0 && (
-              <p className="text-muted-foreground text-xs text-center py-4">표시할 항목이 없습니다</p>
+              <p className="text-muted-foreground text-sm text-center py-6 leading-relaxed">
+                표시할 섹션이 없어요.<br />왼쪽에서 항목을 켜주세요.
+              </p>
             )}
           </div>
         </div>
@@ -562,14 +572,12 @@ function ReadmeCardTab() {
       <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
         <div>
           <p className="text-foreground font-semibold text-sm">카드 Markdown 추출</p>
-          <p className="text-muted-foreground text-xs mt-0.5">위 카드 구성 기준으로 추출</p>
+          <p className="text-muted-foreground text-sm mt-0.5">위 카드 구성 기준으로 추출</p>
         </div>
         <div className="bg-secondary rounded-lg p-3">
           <p className="text-muted-foreground text-xs font-mono">![GitIntel Card](https://gitintel.app/card/...)</p>
         </div>
-        <button className="w-full bg-primary text-primary-foreground text-sm py-2 rounded-lg hover:bg-primary/90 transition-colors">
-          카드 Markdown 복사
-        </button>
+        <Button className="w-full">카드 Markdown 복사</Button>
       </div>
     </div>
   )

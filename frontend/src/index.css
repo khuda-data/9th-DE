@@ -1,71 +1,120 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   브랜드 토큰 — 여기 hex 값만 바꾸면 전체 반영
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 :root {
-  --background: #f7f7fc;
-  --foreground: #0b0b14;
-  --card: #ffffff;
-  --card-foreground: #0b0b14;
-  --primary: #3a6ee8;
-  --primary-foreground: #ffffff;
-  --secondary: #ededf5;
-  --secondary-foreground: #0b0b14;
-  --muted: #ededf5;
-  --muted-foreground: #5f5f7a;
-  --accent: #22b96b;
-  --accent-foreground: #ffffff;
-  --destructive: #d4183d;
-  --border: rgba(0, 0, 0, 0.09);
-  --ring: rgba(58, 110, 232, 0.4);
-  --sidebar: #f0f0f8;
-  --sidebar-foreground: #0b0b14;
-  --sidebar-accent: #e4e4f0;
-  --sidebar-border: rgba(0, 0, 0, 0.08);
+  /* core */
+  --brand-primary: #14B8A6;
+  --brand-accent:  #14B8A6;
+  --brand-success: #A7D129;
+
+  /* light mode surfaces */
+  --brand-bg:      #F2F2F0;
+  --brand-surface: #FFFFFF;
+  --brand-text:    #1B1B1E;
+
+  /* light mode muted */
+  --brand-muted-bg:   #E2E2DF;
+  --brand-muted-text: #6B6B6E;
+  --brand-border:     rgb(0 0 0 / 9%);
 }
 
 .dark {
-  --background: #0b0b14;
-  --foreground: #eeeef4;
-  --card: #12121d;
-  --card-foreground: #eeeef4;
-  --primary: #4f84ff;
-  --primary-foreground: #ffffff;
-  --secondary: #1a1a28;
-  --secondary-foreground: #c8c8da;
-  --muted: #1a1a28;
-  --muted-foreground: #6b6b8a;
-  --accent: #3dd68c;
-  --accent-foreground: #0b0b14;
-  --destructive: #e84040;
-  --border: rgba(255, 255, 255, 0.07);
-  --ring: rgba(79, 132, 255, 0.5);
-  --sidebar: #0e0e19;
-  --sidebar-foreground: #eeeef4;
-  --sidebar-accent: #1a1a28;
-  --sidebar-border: rgba(255, 255, 255, 0.05);
+  /* dark mode surfaces */
+  --brand-bg:      #1B1B1E;
+  --brand-surface: #26262A;
+  --brand-text:    #F2F2F0;
+
+  /* dark mode muted */
+  --brand-muted-bg:   #313136;
+  --brand-muted-text: #9A9A9E;
+  --brand-border:     rgb(255 255 255 / 9%);
+
+  --brand-primary: #14B8A6;
+  --brand-accent:  #14B8A6;
+  --brand-success: #A7D129;
 }
 
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   shadcn 변수에 브랜드 토큰 연결
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+:root, .dark {
+  --primary:            var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --accent:             var(--brand-accent);
+  --accent-foreground:  #ffffff;
+  --success:            var(--brand-success);
+
+  --background:         var(--brand-bg);
+  --foreground:         var(--brand-text);
+  --card:               var(--brand-surface);
+  --card-foreground:    var(--brand-text);
+  --popover:            var(--brand-surface);
+  --popover-foreground: var(--brand-text);
+
+  --secondary:          var(--brand-muted-bg);
+  --secondary-foreground: var(--brand-text);
+  --muted:              var(--brand-muted-bg);
+  --muted-foreground:   var(--brand-muted-text);
+
+  --border:  var(--brand-border);
+  --input:   var(--brand-muted-bg);
+  --ring:    var(--brand-primary);
+
+  --sidebar:                    var(--brand-bg);
+  --sidebar-foreground:         var(--brand-text);
+  --sidebar-accent:             var(--brand-muted-bg);
+  --sidebar-border:             var(--brand-border);
+  --sidebar-primary:            var(--brand-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent-foreground:  var(--brand-text);
+
+  --destructive: #ef4444;
+  --radius: 0.625rem;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Tailwind 유틸리티 클래스 등록
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
+  --color-background:    var(--background);
+  --color-foreground:    var(--foreground);
+  --color-card:          var(--card);
   --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
+  --color-popover:       var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary:       var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
+  --color-secondary:     var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
+  --color-muted:         var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
+  --color-accent:        var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-ring: var(--ring);
-  --color-sidebar: var(--sidebar);
+  --color-success:       var(--success);
+  --color-destructive:   var(--destructive);
+  --color-border:        var(--border);
+  --color-input:         var(--input);
+  --color-ring:          var(--ring);
+  --color-sidebar:       var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
 }
 
 @layer base {
@@ -73,11 +122,35 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    @apply border-border;
+  }
+
+  html {
+    font-size: clamp(16px, 0.6rem + 0.7vw, 18px);
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: system-ui, -apple-system, sans-serif;
+    @apply bg-background text-foreground font-sans;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+@keyframes accordion-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }

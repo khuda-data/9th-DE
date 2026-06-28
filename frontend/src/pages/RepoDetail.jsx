@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import Layout from '../components/Layout'
+import languageLogos from '@/data/languageLogos.json'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,14 +43,14 @@ export default function RepoDetail() {
 
   return (
     <Layout>
-      <div className="py-8 flex flex-col gap-6">
+      <div className="py-8 flex flex-col gap-6 max-w-4xl mx-auto">
 
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-muted-foreground text-sm shrink-0">xihxxn /</span>
           <h2 className="text-2xl font-bold text-foreground tracking-tight truncate">ml-pipeline</h2>
         </div>
 
-        <nav ref={navRef} className="relative flex items-center gap-1 overflow-x-auto">
+        <nav ref={navRef} className="relative flex items-center gap-1 overflow-x-auto sticky top-16 bg-background py-1 z-10">
           <div
             className="absolute inset-y-0 rounded-md bg-primary/15 transition-all duration-200 ease-out"
             style={{ left: indicator.left, width: indicator.width }}
@@ -61,8 +62,8 @@ export default function RepoDetail() {
               onClick={() => setActiveTab(tab)}
               className={`relative z-10 px-3 py-1.5 rounded-md text-sm whitespace-nowrap transition-colors duration-150 ${
                 activeTab === tab
-                  ? 'text-foreground font-semibold'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary font-semibold'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               {tab}
@@ -118,6 +119,23 @@ const AI_SUMMARY = `S3 Data Lake 구조를 직접 설계하고 GitHub API 기반
 
 function OverviewTab() {
   const mdContent = `# ml-pipeline\n\n## AI 프로젝트 요약\n${AI_SUMMARY}\n\n## 주요 활동\n${mockActivities.map((a) => `- ${a.title} (${a.period})`).join('\n')}\n\n## 느낀점\n${mockActivities.map((a) => a.note ? `### ${a.title}\n${a.note}` : '').filter(Boolean).join('\n\n') || '(타임라인에서 기록한 개인 노트가 여기 포함됩니다)'}`
+  const [copied, setCopied] = useState(false)
+
+  function handleDownload() {
+    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'ml-pipeline.md'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(mdContent)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -145,10 +163,15 @@ function OverviewTab() {
           <p className="text-foreground font-semibold">전체 문서 MD 추출</p>
           <p className="text-muted-foreground text-sm mt-1">AI 요약 + 주요 활동 + 느낀점이 포함된 마크다운 파일</p>
         </div>
-        <div className="bg-secondary rounded-lg p-4 max-h-48 overflow-y-auto">
-          <pre className="text-muted-foreground text-xs font-mono whitespace-pre-wrap">{mdContent}</pre>
+        <div className="bg-secondary rounded-lg p-5 overflow-y-auto" style={{ height: '420px' }}>
+          <pre className="text-foreground text-sm font-mono whitespace-pre-wrap leading-relaxed">{mdContent}</pre>
         </div>
-        <Button className="w-full">Markdown으로 내려받기</Button>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={handleDownload}>Markdown으로 내려받기</Button>
+          <Button variant="secondary" className="flex-1" onClick={handleCopy}>
+            {copied ? '복사됨 ✓' : '복사하기'}
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -165,6 +188,16 @@ const TECH_STACKS = [
   { name: 'AWS S3', category: '인프라', pct: null },
 ]
 
+
+function getLogoUrl(name) {
+  const lower = name.toLowerCase()
+  const exact = languageLogos.find((l) => l.name.toLowerCase() === lower)
+  if (exact) return exact.logo_url
+  // "AWS S3" → "AWS" 처럼 첫 단어로 재시도
+  const firstWord = lower.split(' ')[0]
+  const partial = languageLogos.find((l) => l.name.toLowerCase() === firstWord)
+  return partial?.logo_url ?? null
+}
 
 function getTealShades(count) {
   // #14B8A6 ≈ hsl(173, 80%, 40%) → 점점 연해짐
@@ -189,28 +222,40 @@ function TechStackTab() {
           ))}
         </div>
         <div className="flex flex-col gap-2">
-          {languages.map((l, i) => (
+          {languages.map((l, i) => {
+            const logo = getLogoUrl(l.name)
+            return (
             <div key={l.name} className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: shades[i] }} />
+              {logo
+                ? <img src={logo} alt={l.name} className="w-4 h-4 shrink-0 object-contain" />
+                : <div className="w-4 h-4 rounded-sm shrink-0" style={{ backgroundColor: shades[i] }} />
+              }
               <span className="text-sm text-foreground w-20">{l.name}</span>
               <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${l.pct}%`, backgroundColor: shades[i] }} />
               </div>
               <span className="text-muted-foreground text-xs font-mono w-8 text-right">{l.pct}%</span>
             </div>
-          ))}
+          )})}
+
         </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-6">
         <p className="text-foreground font-semibold mb-4">프레임워크 / 툴</p>
         <div className="flex flex-wrap gap-2">
-          {others.map((s) => (
-            <div key={s.name} className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2">
-              <div className="w-5 h-5 rounded bg-muted shrink-0" />
-              <span className="text-sm text-foreground">{s.name}</span>
-            </div>
-          ))}
+          {others.map((s) => {
+            const logo = getLogoUrl(s.name)
+            return (
+              <div key={s.name} className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2">
+                {logo
+                  ? <img src={logo} alt={s.name} className="w-5 h-5 shrink-0 object-contain" />
+                  : <div className="w-5 h-5 rounded bg-muted shrink-0" />
+                }
+                <span className="text-sm text-foreground">{s.name}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
@@ -244,7 +289,7 @@ function TimelineTab() {
               value={notes[activity.id]}
               onChange={(e) => setNotes((prev) => ({ ...prev, [activity.id]: e.target.value }))}
               placeholder="이 활동에 대한 느낀점, 배운 점 등을 기록하세요..."
-              className="min-h-[56px] text-sm resize-none"
+              className="min-h-[56px] max-h-[420px] text-sm resize-none overflow-y-auto"
             />
           </div>
         </div>
@@ -414,17 +459,11 @@ function SortableSection({ section, onToggle }) {
 }
 
 function SectionLabel({ id, label }) {
-  const [hovered, setHovered] = useState(false)
   const c = SECTION_COLORS[id]
   return (
     <span
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="self-start inline-block text-sm font-semibold px-2.5 py-0.5 rounded-full mb-2 cursor-default transition-colors duration-150"
-      style={hovered
-        ? { backgroundColor: c.text, color: '#ffffff' }
-        : { backgroundColor: c.bg, color: c.text }
-      }
+      className="self-start inline-block text-sm font-semibold px-2.5 py-0.5 rounded-full mb-2 cursor-default"
+      style={{ backgroundColor: c.bg, color: c.text }}
     >
       {label}
     </span>
@@ -434,7 +473,16 @@ function SectionLabel({ id, label }) {
 function ReadmeCardTab() {
   const [sections, setSections] = useState(DEFAULT_SECTIONS)
   const [subtitle, setSubtitle] = useState('')
+  const [copied, setCopied] = useState(false)
   const sensors = useSensors(useSensor(PointerSensor))
+
+  const cardMarkdown = '![GitIntel Card](https://gitintel.app/card/...)'
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(cardMarkdown)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   function toggle(id) {
     setSections((prev) => prev.map((s) => s.id === id ? { ...s, on: !s.on } : s))
@@ -575,9 +623,11 @@ function ReadmeCardTab() {
           <p className="text-muted-foreground text-sm mt-0.5">위 카드 구성 기준으로 추출</p>
         </div>
         <div className="bg-secondary rounded-lg p-3">
-          <p className="text-muted-foreground text-xs font-mono">![GitIntel Card](https://gitintel.app/card/...)</p>
+          <p className="text-muted-foreground text-xs font-mono">{cardMarkdown}</p>
         </div>
-        <Button className="w-full">카드 Markdown 복사</Button>
+        <Button className="w-full" onClick={handleCopy}>
+          {copied ? '복사됨 ✓' : '카드 Markdown 복사'}
+        </Button>
       </div>
     </div>
   )

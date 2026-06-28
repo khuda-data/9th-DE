@@ -8,6 +8,6 @@ export const useAuth = create(
       login:  (user) => set({ user }),
       logout: ()     => set({ user: null }),
     }),
-    { name: 'gitintel-auth' }
+    { name: 'trace-auth' }
   )
 )

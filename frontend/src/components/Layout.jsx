@@ -42,7 +42,7 @@ export default function Layout({ children }) {
     return () => window.removeEventListener('repos-visibility', handler)
   }, [location.pathname])
 
-  function handleGitIntel() {
+  function handleTrace() {
     if (location.pathname === '/dashboard') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
@@ -69,10 +69,11 @@ export default function Layout({ children }) {
         <div className="max-w-screen-xl mx-auto h-full px-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
-              onClick={handleGitIntel}
-              className="text-base font-bold text-foreground tracking-tight hover:text-primary transition-colors duration-150"
+              onClick={handleTrace}
+              className="flex items-center gap-2 text-base font-bold text-foreground tracking-tight hover:text-primary transition-colors duration-150"
             >
-              GitIntel
+              <img src="/favicon.png" alt="" className="w-5 h-5 object-contain" />
+              Trace
             </button>
             <Separator orientation="vertical" className="h-4" />
             <nav className="flex items-center gap-1">

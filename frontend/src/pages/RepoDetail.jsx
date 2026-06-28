@@ -515,7 +515,7 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
   const [copied, setCopied] = useState(false)
   const sensors = useSensors(useSensor(PointerSensor))
 
-  const cardMarkdown = '![GitIntel Card](https://gitintel.app/card/...)'
+  const cardMarkdown = '![Trace Card](https://gitintel.app/card/...)'
 
   async function handleCopy() {
     await navigator.clipboard.writeText(cardMarkdown)
@@ -550,7 +550,7 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-sm text-muted-foreground">프로젝트 부제목</label>
-              <span className="text-xs text-muted-foreground">GitIntel 내에서만 수정됨</span>
+              <span className="text-xs text-muted-foreground">Trace 내에서만 수정됨</span>
             </div>
             <Input
               value={subtitle}

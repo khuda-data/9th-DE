@@ -52,10 +52,9 @@ export default function Landing() {
       </Button>
 
       <div className="text-center flex flex-col gap-3 max-w-lg">
-        <h1 className="text-5xl font-bold text-foreground tracking-tight">GitIntel</h1>
+        <h1 className="text-5xl font-bold text-foreground tracking-tight">Trace</h1>
         <p className="text-muted-foreground text-lg leading-relaxed">
-          GitHub 커밋 기록을 분석해 내가 실제로 한 일을<br />
-          증거 기반으로 정리해드립니다
+          GitHub 활동 하나하나를 추적해<br />기술 스택, 기여 요약, 포트폴리오 카드로 연결해드립니다
         </p>
       </div>
 

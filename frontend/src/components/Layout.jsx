@@ -13,7 +13,7 @@ function GithubIcon({ className }) {
   )
 }
 
-function scrollToSection(id, offset = 80) {
+function scrollToSection(id, offset = 64) {
   const el = document.getElementById(id)
   if (!el) return
   const top = el.getBoundingClientRect().top + window.scrollY - offset
@@ -51,7 +51,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="h-14 border-b border-border bg-card sticky top-0 z-10">
+      <header className="h-16 border-b border-border bg-card sticky top-0 z-10">
         <div className="max-w-screen-xl mx-auto h-full px-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button

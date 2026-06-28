@@ -6,6 +6,8 @@ import { ThemeProvider } from './store/theme'
 import './index.css'
 import App from './App.jsx'
 
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')).render(

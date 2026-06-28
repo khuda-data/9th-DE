@@ -23,48 +23,118 @@ const mockCommitActivity = [
 ]
 
 
+const mockLangStats = [
+  { lang: 'Python',     pct: 45 },
+  { lang: 'SQL',        pct: 25 },
+  { lang: 'JavaScript', pct: 15 },
+  { lang: 'Shell',      pct: 10 },
+  { lang: 'YAML',       pct: 5  },
+]
+
+function DonutChart({ data }) {
+  const r = 64
+  const strokeW = 20
+  const cx = 80
+  const cy = 80
+  const circumference = 2 * Math.PI * r
+  let offset = 0
+
+  const segments = data.map((d, i) => {
+    const lightness = 40 + (i / (data.length - 1)) * 32
+    const color = `hsl(173, 70%, ${lightness}%)`
+    const dash = (d.pct / 100) * circumference
+    const seg = { ...d, color, dash, offset }
+    offset += dash
+    return seg
+  })
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <svg width={cx * 2} height={cy * 2} viewBox={`0 0 ${cx * 2} ${cy * 2}`}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--brand-muted-bg)" strokeWidth={strokeW} />
+        {segments.map((s) => (
+          <circle
+            key={s.lang}
+            cx={cx} cy={cy} r={r}
+            fill="none"
+            stroke={s.color}
+            strokeWidth={strokeW}
+            strokeDasharray={`${s.dash} ${circumference - s.dash}`}
+            strokeDashoffset={circumference / 4 - s.offset}
+            strokeLinecap="butt"
+          />
+        ))}
+        <text x={cx} y={cy - 6} textAnchor="middle" fontSize="11" fill="var(--brand-muted-text)">주 언어</text>
+        <text x={cx} y={cy + 12} textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--brand-text)">Python</text>
+      </svg>
+      <div className="flex flex-col gap-1.5 w-full">
+        {segments.map((s) => (
+          <div key={s.lang} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+              <span className="text-sm text-foreground">{s.lang}</span>
+            </div>
+            <span className="text-sm text-muted-foreground font-mono">{s.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function StatsSection() {
   const maxCount = Math.max(...mockCommitActivity.map((d) => d.count))
   const totalCommits = mockCommitActivity.reduce((s, d) => s + d.count, 0)
 
   return (
     <section className="flex flex-col gap-6 pb-10 border-b border-border">
-      {/* 요약 수치 */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: '등록 레포', value: '3' },
-          { label: '총 커밋', value: totalCommits.toLocaleString() },
-          { label: '사용 언어', value: '5개' },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-5">
-            <p className="text-muted-foreground text-sm mb-1">{label}</p>
-            <p className="text-foreground text-2xl font-bold tracking-tight">{value}</p>
+      <div className="flex gap-8 items-start">
+      <div className="flex-1 max-w-2xl flex flex-col gap-6">
+        {/* 요약 수치 */}
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: '등록 레포', value: '3' },
+            { label: '총 커밋', value: totalCommits.toLocaleString() },
+            { label: '사용 언어', value: '5개' },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-card border border-border rounded-xl p-5">
+              <p className="text-muted-foreground text-sm mb-1">{label}</p>
+              <p className="text-foreground text-2xl font-bold tracking-tight">{value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* 커밋 활동 */}
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
+          <p className="text-foreground font-semibold">커밋 활동</p>
+          <div className="flex items-end gap-1.5">
+            {mockCommitActivity.map((d) => {
+              const barH = Math.round((d.count / maxCount) * 120)
+              return (
+                <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-muted-foreground font-mono" style={{ fontSize: '10px' }}>{d.count}</span>
+                  <div
+                    className="w-full rounded-t-sm"
+                    style={{
+                      height: `${barH}px`,
+                      backgroundColor: 'var(--brand-primary)',
+                      opacity: 0.25 + (d.count / maxCount) * 0.75,
+                    }}
+                  />
+                  <span className="text-muted-foreground font-mono" style={{ fontSize: '9px' }}>{d.month}</span>
+                </div>
+              )
+            })}
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* 커밋 활동 */}
-      <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
-        <p className="text-foreground font-semibold">커밋 활동</p>
-        <div className="flex items-end gap-1.5">
-          {mockCommitActivity.map((d) => {
-            const barH = Math.round((d.count / maxCount) * 120)
-            return (
-              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-muted-foreground font-mono" style={{ fontSize: '10px' }}>{d.count}</span>
-                <div
-                  className="w-full rounded-t-sm"
-                  style={{
-                    height: `${barH}px`,
-                    backgroundColor: 'var(--brand-primary)',
-                    opacity: 0.25 + (d.count / maxCount) * 0.75,
-                  }}
-                />
-                <span className="text-muted-foreground font-mono" style={{ fontSize: '9px' }}>{d.month}</span>
-              </div>
-            )
-          })}
-        </div>
+      {/* 오른쪽: 언어 비중 도넛 */}
+      <div className="shrink-0 bg-card border border-border rounded-xl p-5">
+        <p className="text-foreground font-semibold mb-4">사용 언어</p>
+        <DonutChart data={mockLangStats} />
+      </div>
+
       </div>
     </section>
   )
@@ -223,15 +293,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     const target = location.state?.scrollTo
-    if (!target) return
-    requestAnimationFrame(() => {
+    if (!target) {
+      window.scrollTo(0, 0)
+      return
+    }
+    setTimeout(() => {
       if (target === 'repos') {
         const el = document.getElementById('repos-section')
-        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' })
+        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 64, behavior: 'smooth' })
       } else {
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
-    })
+    }, 50)
   }, [])
 
   useEffect(() => {
@@ -240,7 +313,7 @@ export default function Dashboard() {
     // stats 섹션이 화면 위로 사라지면(scrolled past) → teal, 다시 보이면 → gray
     const observer = new IntersectionObserver(
       ([entry]) => window.dispatchEvent(new CustomEvent('repos-visibility', { detail: !entry.isIntersecting })),
-      { threshold: 0, rootMargin: '-56px 0px 0px 0px' }
+      { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -254,7 +327,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="py-8 flex flex-col gap-8">
+      <div className="py-8 flex flex-col gap-8 max-w-4xl mx-auto">
 
         <div ref={statsRef} id="stats-section"><StatsSection /></div>
 

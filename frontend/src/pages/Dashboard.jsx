@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, Star, GitFork, Lock, Globe } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { fetchRepo, ApiError } from '@/api/github'
 
 const mockCommitActivity = [
   { month: 'Jan', count: 12 },
@@ -140,6 +143,114 @@ function StatsSection() {
   )
 }
 
+const LOGGED_IN_USER = 'xihxxn'
+
+function RegisterRepoModal({ open, onClose, onRegister }) {
+  const [input, setInput] = useState('')
+  const [status, setStatus] = useState('idle') // idle | loading | found | error
+  const [repoData, setRepoData] = useState(null)
+  const [errorMsg, setErrorMsg] = useState('')
+
+  function reset() {
+    setInput('')
+    setStatus('idle')
+    setRepoData(null)
+    setErrorMsg('')
+  }
+
+  function handleClose() {
+    reset()
+    onClose()
+  }
+
+  async function handleSearch() {
+    const trimmed = input.trim()
+    if (!trimmed) return
+    const [ownerPart, repoPart] = trimmed.includes('/')
+      ? trimmed.split('/')
+      : [LOGGED_IN_USER, trimmed]
+    if (!repoPart) { setErrorMsg('레포명을 입력해주세요.'); setStatus('error'); return }
+
+    setStatus('loading')
+    setRepoData(null)
+    setErrorMsg('')
+
+    try {
+      const data = await fetchRepo(ownerPart, repoPart)
+      setRepoData(data)
+      setStatus('found')
+    } catch (e) {
+      setErrorMsg(e instanceof ApiError ? e.message : '네트워크 오류가 발생했어요.')
+      setStatus('error')
+    }
+  }
+
+  function handleConfirm() {
+    if (repoData) onRegister(repoData)
+    handleClose()
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>레포지토리 등록</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4 mt-2">
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">
+              <span className="font-mono text-foreground">소유자/레포명</span> 형식으로 입력하세요.<br />
+              소유자 생략 시 내 계정(<span className="font-mono">{LOGGED_IN_USER}</span>)으로 검색합니다.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="xihxxn/ml-pipeline"
+                value={input}
+                onChange={(e) => { setInput(e.target.value); setStatus('idle'); setRepoData(null) }}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="font-mono text-sm"
+              />
+              <Button onClick={handleSearch} disabled={status === 'loading'}>
+                {status === 'loading' ? '검색 중…' : '검색'}
+              </Button>
+            </div>
+          </div>
+
+          {status === 'error' && (
+            <p className="text-sm text-destructive">{errorMsg}</p>
+          )}
+
+          {status === 'found' && repoData && (
+            <div className="border border-border rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-semibold text-foreground">{repoData.full_name}</p>
+                  {repoData.description && (
+                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{repoData.description}</p>
+                  )}
+                </div>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0 mt-0.5">
+                  {repoData.private
+                    ? <><Lock className="w-3 h-3" />비공개</>
+                    : <><Globe className="w-3 h-3" />공개</>
+                  }
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                {repoData.language && <span className="text-foreground font-medium">{repoData.language}</span>}
+                <span className="flex items-center gap-1"><Star className="w-3 h-3" />{repoData.stargazers_count.toLocaleString()}</span>
+                <span className="flex items-center gap-1"><GitFork className="w-3 h-3" />{repoData.forks_count.toLocaleString()}</span>
+              </div>
+              <Button className="w-full" onClick={handleConfirm}>등록하기</Button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 const mockRepos = [
   {
     id: 1,
@@ -208,7 +319,7 @@ function FeaturedRepoCard({ repo, isPublic, onTogglePublic }) {
 
   return (
     <div
-      onClick={() => navigate(`/repo/${repo.id}`)}
+      onClick={() => navigate(`/repo/${repo.id}`, { state: { subtitle: repo.subtitle } })}
       className="bg-card border border-border rounded-xl p-6 cursor-pointer hover:border-primary/40 transition-colors duration-150"
     >
       <div className="flex items-start justify-between gap-4 mb-5">
@@ -224,7 +335,10 @@ function FeaturedRepoCard({ repo, isPublic, onTogglePublic }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 flex flex-col gap-4">
-          <p className="text-foreground text-sm leading-relaxed">{repo.aiSummary}</p>
+          {repo.aiSummary
+            ? <p className={`text-sm leading-relaxed ${repo.aiReady === false ? 'text-muted-foreground' : 'text-foreground'}`}>{repo.aiSummary}</p>
+            : <p className="text-sm text-muted-foreground italic">AI 요약 준비 중</p>
+          }
           <div className="flex gap-1.5 flex-wrap">
             {repo.techStack.map((t) => (
               <Badge key={t} variant="secondary">{t}</Badge>
@@ -253,7 +367,7 @@ function CompactRepoCard({ repo, isPublic, onTogglePublic }) {
 
   return (
     <div
-      onClick={() => navigate(`/repo/${repo.id}`)}
+      onClick={() => navigate(`/repo/${repo.id}`, { state: { subtitle: repo.subtitle } })}
       className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3 cursor-pointer hover:border-primary/40 transition-colors duration-150"
     >
       <div className="flex items-start justify-between gap-3">
@@ -267,7 +381,10 @@ function CompactRepoCard({ repo, isPublic, onTogglePublic }) {
         <PublicSwitch isPublic={isPublic} onToggle={onTogglePublic} />
       </div>
 
-      <p className="text-foreground text-sm leading-relaxed line-clamp-2">{repo.aiSummary}</p>
+      {repo.aiSummary
+        ? <p className={`text-sm leading-relaxed line-clamp-2 ${repo.aiReady === false ? 'text-muted-foreground' : 'text-foreground'}`}>{repo.aiSummary}</p>
+        : <p className="text-sm text-muted-foreground italic">AI 요약 준비 중</p>
+      }
 
       <div className="flex gap-1.5 flex-wrap">
         {repo.techStack.slice(0, 3).map((t) => (
@@ -319,11 +436,31 @@ export default function Dashboard() {
     return () => observer.disconnect()
   }, [])
 
+  const [modalOpen, setModalOpen] = useState(false)
+  const [repos, setRepos] = useState(mockRepos)
+
   function togglePublic(id) {
     setPublicMap((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
-  const [featured, ...rest] = mockRepos
+  function handleRegister(ghRepo) {
+    const newRepo = {
+      id: Date.now(),
+      name: ghRepo.name,
+      owner: ghRepo.owner.login,
+      subtitle: ghRepo.description || '',
+      lastUpdated: new Date(ghRepo.updated_at).toLocaleDateString('ko-KR').replace(/\. /g, '.').replace('.', ''),
+      aiSummary: '',
+      aiReady: false,
+      techStack: ghRepo.language ? [ghRepo.language] : [],
+      timeline: [],
+      contributions: [],
+    }
+    setRepos((prev) => [...prev, newRepo])
+    setPublicMap((prev) => ({ ...prev, [newRepo.id]: !ghRepo.private }))
+  }
+
+  const [featured, ...rest] = repos
 
   return (
     <Layout>
@@ -333,11 +470,17 @@ export default function Dashboard() {
 
         <div id="repos-section" className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground tracking-tight">레포지토리</h2>
-          <Button>
+          <Button onClick={() => setModalOpen(true)}>
             <Plus className="w-4 h-4" />
             등록
           </Button>
         </div>
+
+        <RegisterRepoModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onRegister={handleRegister}
+        />
 
         <div className="flex flex-col gap-5">
           <FeaturedRepoCard

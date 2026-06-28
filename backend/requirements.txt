@@ -1,46 +1,16 @@
-# =========================
-# FastAPI
-# =========================
 fastapi
 uvicorn[standard]
-
-# =========================
-# Database
-# =========================
 sqlalchemy
 asyncpg
 alembic
-
-# =========================
-# Validation / Settings
-# =========================
 pydantic
 pydantic-settings
 python-dotenv
-
-# =========================
-# Authentication
-# =========================
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
-
-# =========================
-# HTTP Client
-# =========================
 httpx
-
-# =========================
-# AWS S3
-# =========================
 boto3
-
-# =========================
-# Logging
-# =========================
 python-json-logger
-
-# =========================
-# Utilities
-# =========================
 python-dateutil
+greenletw

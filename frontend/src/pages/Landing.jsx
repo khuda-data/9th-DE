@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Sun, Moon } from 'lucide-react'
 import { useTheme } from '../store/theme'
 import { useAuth } from '../store/auth'
+import { API_BASE } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import techLight from '@/assets/tech-analysis-light.png'
 import techDark  from '@/assets/tech-analysis-dark.png'
@@ -30,12 +31,7 @@ export default function Landing() {
   }, [user, navigate])
 
   function handleGithubLogin() {
-    // 백엔드 연동 후:
-    // window.location.href = `${API_BASE}/auth/github?redirect_uri=${window.location.origin}/auth/callback`
-
-    // 프로토타입: 모의 로그인
-    login({ login: 'xihxxn', name: 'Sihyun', avatar_url: null })
-    navigate('/dashboard')
+    window.location.href = `${API_BASE}/auth/github`
   }
 
   return (

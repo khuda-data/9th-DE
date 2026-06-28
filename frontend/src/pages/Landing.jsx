@@ -1,7 +1,15 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Sun, Moon } from 'lucide-react'
 import { useTheme } from '../store/theme'
+import { useAuth } from '../store/auth'
 import { Button } from '@/components/ui/button'
+import techLight from '@/assets/tech-analysis-light.png'
+import techDark  from '@/assets/tech-analysis-dark.png'
+import aiLight   from '@/assets/ai-summary-light.png'
+import aiDark    from '@/assets/ai-summary-dark.png'
+import cardLight from '@/assets/readme-card-light.png'
+import cardDark  from '@/assets/readme-card-dark.png'
 
 function GithubIcon({ className }) {
   return (
@@ -14,6 +22,21 @@ function GithubIcon({ className }) {
 export default function Landing() {
   const navigate = useNavigate()
   const { theme, toggle } = useTheme()
+  const { user, login } = useAuth()
+
+  // 이미 로그인된 경우 대시보드로
+  useEffect(() => {
+    if (user) navigate('/dashboard', { replace: true })
+  }, [user, navigate])
+
+  function handleGithubLogin() {
+    // 백엔드 연동 후:
+    // window.location.href = `${API_BASE}/auth/github?redirect_uri=${window.location.origin}/auth/callback`
+
+    // 프로토타입: 모의 로그인
+    login({ login: 'xihxxn', name: 'Sihyun', avatar_url: null })
+    navigate('/dashboard')
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-10 px-4">
@@ -37,11 +60,7 @@ export default function Landing() {
       </div>
 
       <div className="w-full max-w-sm border border-border rounded-2xl p-6 flex flex-col gap-4 bg-card">
-        <Button
-          size="lg"
-          className="w-full gap-3"
-          onClick={() => navigate('/dashboard')}
-        >
+        <Button size="lg" className="w-full gap-3" onClick={handleGithubLogin}>
           <GithubIcon className="w-5 h-5" />
           GitHub으로 로그인
           <ArrowRight className="w-4 h-4" />
@@ -52,9 +71,19 @@ export default function Landing() {
       </div>
 
       <div className="flex gap-12">
-        {['기술 스택 분석', 'AI 기여 요약', 'README 카드'].map((label) => (
+        {[
+          { label: '기술 스택 분석', light: techLight, dark: techDark },
+          { label: 'AI 기여 요약',   light: aiLight,   dark: aiDark   },
+          { label: 'README 카드',    light: cardLight, dark: cardDark  },
+        ].map(({ label, light, dark }) => (
           <div key={label} className="text-center">
-            <div className="w-12 h-12 rounded-xl bg-secondary mx-auto mb-3" />
+            <div className="w-14 h-14 rounded-3xl overflow-hidden mx-auto mb-3">
+              <img
+                src={theme === 'dark' ? dark : light}
+                alt={label}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <p className="text-foreground text-sm font-medium">{label}</p>
           </div>
         ))}

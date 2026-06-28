@@ -1,6 +1,9 @@
-import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Sun, Moon } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../store/theme'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 
 function GithubIcon({ className }) {
   return (
@@ -10,58 +13,92 @@ function GithubIcon({ className }) {
   )
 }
 
-const navItems = [
-  { path: '/dashboard', label: '대시보드', icon: LayoutDashboard },
-]
+function scrollToSection(id, offset = 80) {
+  const el = document.getElementById(id)
+  if (!el) return
+  const top = el.getBoundingClientRect().top + window.scrollY - offset
+  window.scrollTo({ top, behavior: 'smooth' })
+}
 
 export default function Layout({ children }) {
   const { theme, toggle } = useTheme()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [reposVisible, setReposVisible] = useState(false)
+
+  useEffect(() => {
+    setReposVisible(false)
+    const handler = (e) => setReposVisible(e.detail)
+    window.addEventListener('repos-visibility', handler)
+    return () => window.removeEventListener('repos-visibility', handler)
+  }, [location.pathname])
+
+  function handleGitIntel() {
+    if (location.pathname === '/dashboard') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      navigate('/dashboard', { state: { scrollTo: 'stats' } })
+    }
+  }
+
+  function handleDashboard() {
+    if (location.pathname === '/dashboard') {
+      scrollToSection('repos-section')
+    } else {
+      navigate('/dashboard', { state: { scrollTo: 'repos' } })
+    }
+  }
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="w-60 border-r border-sidebar-border flex flex-col bg-sidebar">
-        <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
-          <span className="text-lg font-bold text-foreground">GitIntel</span>
-          <button
-            onClick={toggle}
-            className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-        </div>
-
-        <nav className="flex-1 p-4 flex flex-col gap-1">
-          {navItems.map(({ path, label, icon: Icon }) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive
-                    ? 'bg-primary/15 text-primary font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent'
-                }`
-              }
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <header className="h-14 border-b border-border bg-card sticky top-0 z-10">
+        <div className="max-w-screen-xl mx-auto h-full px-16 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={handleGitIntel}
+              className="text-base font-bold text-foreground tracking-tight hover:text-primary transition-colors duration-150"
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+              GitIntel
+            </button>
+            <Separator orientation="vertical" className="h-4" />
+            <nav className="flex items-center gap-1">
+              <button
+                onClick={handleDashboard}
+                className={`px-3 py-1.5 rounded-md text-sm transition-colors duration-150 ${
+                  reposVisible
+                    ? 'text-primary font-semibold'
+                    : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+                }`}
+              >
+                대시보드
+              </button>
+            </nav>
+          </div>
 
-        <div className="p-4 border-t border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-secondary" />
-            <div>
-              <p className="text-sm text-foreground">username</p>
-              <p className="text-xs text-muted-foreground">GitHub</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggle}
+              aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              className="w-9 h-9 text-muted-foreground"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                <GithubIcon className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+              <span className="text-sm text-foreground font-medium">xihxxn</span>
             </div>
           </div>
         </div>
-      </aside>
+      </header>
 
-      <main className="flex-1 overflow-auto">
-        {children}
+      <main className="flex-1">
+        <div className="max-w-screen-xl mx-auto px-16">
+          {children}
+        </div>
       </main>
     </div>
   )

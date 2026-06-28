@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Zap, Sun, Moon } from 'lucide-react'
+import { ArrowRight, Sun, Moon } from 'lucide-react'
 import { useTheme } from '../store/theme'
+import { Button } from '@/components/ui/button'
 
 function GithubIcon({ className }) {
   return (
@@ -15,57 +16,46 @@ export default function Landing() {
   const { theme, toggle } = useTheme()
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-8">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-10 px-4">
 
-      {/* 테마 토글 */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={toggle}
-        className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors border border-border"
+        aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+        className="absolute top-5 right-5"
       >
         {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </button>
+      </Button>
 
-      <div className="text-center flex flex-col gap-3">
-        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-xs font-medium mx-auto">
-          <Zap className="w-3 h-3" />
-          베타 출시 · AI 분석 기반
-        </div>
-        <h1 className="text-5xl font-bold text-foreground">GitIntel</h1>
-        <p className="text-muted-foreground text-lg">
-          GitHub 활동을 증거 기반으로 분석해서 포트폴리오로 만들어드립니다
+      <div className="text-center flex flex-col gap-3 max-w-lg">
+        <h1 className="text-5xl font-bold text-foreground tracking-tight">GitIntel</h1>
+        <p className="text-muted-foreground text-lg leading-relaxed">
+          GitHub 커밋 기록을 분석해 내가 실제로 한 일을<br />
+          증거 기반으로 정리해드립니다
         </p>
       </div>
 
-      <div className="w-96 border border-border rounded-xl p-8 flex flex-col gap-6 bg-card">
-        <div className="text-center">
-          <p className="text-foreground font-semibold text-lg">시작하기</p>
-          <p className="text-muted-foreground text-sm mt-1">GitHub 계정으로 로그인하세요</p>
-        </div>
-
-        <button
+      <div className="w-full max-w-sm border border-border rounded-2xl p-6 flex flex-col gap-4 bg-card">
+        <Button
+          size="lg"
+          className="w-full gap-3"
           onClick={() => navigate('/dashboard')}
-          className="w-full flex items-center justify-center gap-3 bg-primary text-primary-foreground font-medium py-3 rounded-lg hover:bg-primary/90 transition-colors"
         >
           <GithubIcon className="w-5 h-5" />
           GitHub으로 로그인
           <ArrowRight className="w-4 h-4" />
-        </button>
-
-        <p className="text-center text-xs text-muted-foreground">
-          로그인 시 레포지토리 읽기 권한이 요청됩니다
+        </Button>
+        <p className="text-center text-sm text-muted-foreground">
+          레포지토리 읽기 권한이 요청됩니다
         </p>
       </div>
 
-      <div className="flex gap-12 mt-4">
-        {[
-          { label: '기술 스택 분석', desc: '레포에서 자동 추출' },
-          { label: 'AI 기여 요약', desc: '커밋 기반 자동 생성' },
-          { label: 'README 카드', desc: '포트폴리오 쇼케이스' },
-        ].map(({ label, desc }) => (
+      <div className="flex gap-12">
+        {['기술 스택 분석', 'AI 기여 요약', 'README 카드'].map((label) => (
           <div key={label} className="text-center">
-            <div className="w-12 h-12 rounded-lg bg-secondary mx-auto mb-2" />
+            <div className="w-12 h-12 rounded-xl bg-secondary mx-auto mb-3" />
             <p className="text-foreground text-sm font-medium">{label}</p>
-            <p className="text-muted-foreground text-xs">{desc}</p>
           </div>
         ))}
       </div>

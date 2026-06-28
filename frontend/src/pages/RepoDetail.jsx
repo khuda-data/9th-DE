@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import { GripVertical, ChevronDown } from 'lucide-react'
 import {
   DndContext,
@@ -28,6 +28,8 @@ const TABS = ['개요', '기술 스택', '타임라인', '기여 목록/근거',
 
 export default function RepoDetail() {
   const { repoId } = useParams()
+  const location = useLocation()
+  const initialSubtitle = location.state?.subtitle ?? ''
   const [activeTab, setActiveTab] = useState('개요')
   const navRef = useRef(null)
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
@@ -76,7 +78,7 @@ export default function RepoDetail() {
           {activeTab === '기술 스택' && <TechStackTab />}
           {activeTab === '타임라인' && <TimelineTab />}
           {activeTab === '기여 목록/근거' && <ContributionTab />}
-          {activeTab === 'README 카드' && <ReadmeCardTab />}
+          {activeTab === 'README 카드' && <ReadmeCardTab initialSubtitle={initialSubtitle} />}
         </div>
 
       </div>
@@ -189,14 +191,21 @@ const TECH_STACKS = [
 ]
 
 
-function getLogoUrl(name) {
+function getLogoEntry(name) {
   const lower = name.toLowerCase()
   const exact = languageLogos.find((l) => l.name.toLowerCase() === lower)
-  if (exact) return exact.logo_url
-  // "AWS S3" → "AWS" 처럼 첫 단어로 재시도
+  if (exact) return exact
   const firstWord = lower.split(' ')[0]
-  const partial = languageLogos.find((l) => l.name.toLowerCase() === firstWord)
-  return partial?.logo_url ?? null
+  return languageLogos.find((l) => l.name.toLowerCase() === firstWord) ?? null
+}
+
+function LogoIcon({ name, className = 'w-5 h-5' }) {
+  const entry = getLogoEntry(name)
+  if (!entry) return null
+  if (entry.devicon_class) {
+    return <i className={`${entry.devicon_class} text-foreground`} style={{ fontSize: className.includes('w-4') ? '16px' : '20px' }} />
+  }
+  return <img src={entry.logo_url} alt={name} className={`${className} object-contain`} />
 }
 
 function getTealShades(count) {
@@ -223,11 +232,11 @@ function TechStackTab() {
         </div>
         <div className="flex flex-col gap-2">
           {languages.map((l, i) => {
-            const logo = getLogoUrl(l.name)
+            const hasLogo = !!getLogoEntry(l.name)
             return (
             <div key={l.name} className="flex items-center gap-3">
-              {logo
-                ? <img src={logo} alt={l.name} className="w-4 h-4 shrink-0 object-contain" />
+              {hasLogo
+                ? <LogoIcon name={l.name} className="w-4 h-4 shrink-0" />
                 : <div className="w-4 h-4 rounded-sm shrink-0" style={{ backgroundColor: shades[i] }} />
               }
               <span className="text-sm text-foreground w-20">{l.name}</span>
@@ -245,11 +254,11 @@ function TechStackTab() {
         <p className="text-foreground font-semibold mb-4">프레임워크 / 툴</p>
         <div className="flex flex-wrap gap-2">
           {others.map((s) => {
-            const logo = getLogoUrl(s.name)
+            const hasLogo = !!getLogoEntry(s.name)
             return (
               <div key={s.name} className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2">
-                {logo
-                  ? <img src={logo} alt={s.name} className="w-5 h-5 shrink-0 object-contain" />
+                {hasLogo
+                  ? <LogoIcon name={s.name} className="w-5 h-5 shrink-0" />
                   : <div className="w-5 h-5 rounded bg-muted shrink-0" />
                 }
                 <span className="text-sm text-foreground">{s.name}</span>
@@ -470,9 +479,9 @@ function SectionLabel({ id, label }) {
   )
 }
 
-function ReadmeCardTab() {
+function ReadmeCardTab({ initialSubtitle = '' }) {
   const [sections, setSections] = useState(DEFAULT_SECTIONS)
-  const [subtitle, setSubtitle] = useState('')
+  const [subtitle, setSubtitle] = useState(initialSubtitle)
   const [copied, setCopied] = useState(false)
   const sensors = useSensors(useSensor(PointerSensor))
 
@@ -509,7 +518,10 @@ function ReadmeCardTab() {
           <p className="text-foreground font-semibold text-sm">카드 구성</p>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm text-muted-foreground">프로젝트 부제목</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-muted-foreground">프로젝트 부제목</label>
+              <span className="text-xs text-muted-foreground">GitIntel 내에서만 수정됨</span>
+            </div>
             <Input
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
@@ -553,10 +565,15 @@ function ReadmeCardTab() {
                 {s.id === 'techstack' && (
                   <div>
                     <SectionLabel id="techstack" label="기술 스택" />
-                    <div className="flex gap-1 flex-wrap">
-                      {['Python', 'FastAPI', 'Airflow'].map((t) => (
-                        <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-secondary text-foreground">{t}</span>
-                      ))}
+                    <div className="flex gap-1.5 flex-wrap">
+                      {['Python', 'FastAPI', 'Airflow', 'PostgreSQL', 'Docker'].map((t) => {
+                        const hasLogo = !!getLogoEntry(t)
+                        return hasLogo ? (
+                          <LogoIcon key={t} name={t} className="w-5 h-5" />
+                        ) : (
+                          <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-secondary text-foreground">{t}</span>
+                        )
+                      })}
                     </div>
                   </div>
                 )}

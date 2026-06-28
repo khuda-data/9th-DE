@@ -37,5 +37,7 @@ class Settings(BaseSettings):
     AIRFLOW_USERNAME: str = "admin"
     AIRFLOW_PASSWORD: str = "admin"
 
+    FRONTEND_URL: str
+    BACKEND_URL: str
 
 settings = Settings()

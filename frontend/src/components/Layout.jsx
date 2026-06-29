@@ -59,6 +59,7 @@ export default function Layout({ children }) {
   }
 
   function handleLogout() {
+    localStorage.removeItem('accessToken')
     logout()
     navigate('/')
   }

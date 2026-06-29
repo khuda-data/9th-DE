@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../store/auth'
+import { fetchMe } from '../api/auth'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
@@ -12,8 +13,12 @@ export default function AuthCallback() {
 
     if (token) {
       localStorage.setItem('accessToken', token)
-      // TODO: GET /auth/me 호출해서 유저 정보 받아온 뒤 login() 호출
-      navigate('/dashboard', { replace: true })
+      fetchMe()
+        .then((user) => {
+          login(user)
+          navigate('/dashboard', { replace: true })
+        })
+        .catch(() => navigate('/', { replace: true }))
     } else {
       navigate('/', { replace: true })
     }

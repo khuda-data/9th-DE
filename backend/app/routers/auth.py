@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
+from app.dependencies import get_current_user
+from app.models.user import User
 from app.services.auth_service import AuthService
 from app.services.github_service import get_github_login_url
 
@@ -18,6 +20,15 @@ async def github_login():
     return RedirectResponse(
         url=get_github_login_url()
     )
+
+
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    return {
+        "login": user.login,
+        "name": user.name,
+        "avatar_url": user.avatar_url,
+    }
 
 
 @router.get("/callback")

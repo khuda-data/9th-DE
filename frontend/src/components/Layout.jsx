@@ -101,6 +101,18 @@ export default function Layout({ children }) {
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
 
+            {user?.login && (
+              <a
+                href={`https://github.com/${user.login}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors duration-150"
+                aria-label="GitHub 프로필"
+              >
+                <GithubIcon className="w-4 h-4" />
+              </a>
+            )}
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-secondary/60 transition-colors duration-150">

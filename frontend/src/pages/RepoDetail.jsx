@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
-import { GripVertical, ChevronDown } from 'lucide-react'
+import { GripVertical, ChevronDown, Shuffle } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -448,6 +448,101 @@ function ContributionTab() {
 }
 
 
+const COLOR_PAIRS = [
+  // ── 따뜻한 라이트 ──
+  { bg: '#FFF8F0', point: '#C0533A' },
+  { bg: '#FFF3E0', point: '#E65100' },
+  { bg: '#FDEBD0', point: '#A04000' },
+  { bg: '#FDF6EC', point: '#8B4513' },
+  { bg: '#FCF3CF', point: '#D4890A' },
+  { bg: '#FFF9C4', point: '#F57F17' },
+  { bg: '#FFF0F0', point: '#C62828' },
+  { bg: '#FFF5F5', point: '#AD1457' },
+
+  // ── 차가운 라이트 ──
+  { bg: '#E8F5F0', point: '#1A6B4A' },
+  { bg: '#E3F2FD', point: '#1565C0' },
+  { bg: '#E8F4FD', point: '#0D47A1' },
+  { bg: '#E0F7FA', point: '#006064' },
+  { bg: '#E8EAF6', point: '#283593' },
+  { bg: '#EFF3F7', point: '#1E3A5F' },
+  { bg: '#F0F4FF', point: '#3949AB' },
+  { bg: '#E8F5E9', point: '#2E7D32' },
+  { bg: '#F9FBE7', point: '#558B2F' },
+  { bg: '#F0FAF5', point: '#0F7B5A' },
+  { bg: '#F0FFF4', point: '#1B5E20' },
+
+  // ── 퍼플·라벤더 ──
+  { bg: '#F0EEFF', point: '#4F3CC9' },
+  { bg: '#F5F0FF', point: '#6B21A8' },
+  { bg: '#EDE7F6', point: '#4527A0' },
+  { bg: '#FDF4FF', point: '#9C27B0' },
+  { bg: '#FCEEF5', point: '#7B1FA2' },
+
+  // ── 로즈·핑크 ──
+  { bg: '#FDF0F5', point: '#B03070' },
+  { bg: '#FCE4EC', point: '#880E4F' },
+  { bg: '#FFF0F7', point: '#C2185B' },
+
+  // ── 뉴트럴·어스톤 ──
+  { bg: '#FAF7F2', point: '#6B4C2A' },
+  { bg: '#F5F0EB', point: '#795548' },
+  { bg: '#EFEBE9', point: '#4E342E' },
+  { bg: '#ECEFF1', point: '#37474F' },
+  { bg: '#F9F9F9', point: '#212121' },
+  { bg: '#FAFAFA', point: '#1565C0' },
+
+  // ── 보색 (complementary) ──
+  { bg: '#FFF3CD', point: '#1A237E' },  // 노랑 / 딥인디고
+  { bg: '#FFE0CC', point: '#0D47A1' },  // 피치 / 딥블루
+  { bg: '#E8F5E9', point: '#B71C1C' },  // 연그린 / 딥레드
+  { bg: '#FFFDE7', point: '#4A148C' },  // 크림옐로 / 딥퍼플
+  { bg: '#E0F2F1', point: '#BF360C' },  // 틸 / 딥러스트
+  { bg: '#FFF8E1', point: '#006064' },  // 아이보리 / 다크틸
+  { bg: '#F3E5F5', point: '#1B5E20' },  // 연보라 / 다크그린
+  { bg: '#E8F4FD', point: '#E65100' },  // 하늘 / 번트오렌지
+
+  // ── 유니크·비비드 ──
+  { bg: '#F9F9F9', point: '#E91E63' },  // 화이트 / 핫핑크
+  { bg: '#FFFFF0', point: '#33691E' },  // 아이보리 / 딥올리브
+  { bg: '#F0FFFF', point: '#BF360C' },  // 아쿠아화이트 / 번트오렌지
+  { bg: '#FFF5EE', point: '#0277BD' },  // 시셸 / 스틸블루
+  { bg: '#F5FFFA', point: '#6A1B9A' },  // 민트화이트 / 퍼플
+  { bg: '#FFFAF0', point: '#00695C' },  // 플로럴화이트 / 틸그린
+
+  // ── 다크 bg + 라이트 포인트 ──
+  { bg: '#1A1A2E', point: '#E94560' },  // 딥네이비 / 비비드핑크
+  { bg: '#0F3460', point: '#F5A623' },  // 다크블루 / 골든
+  { bg: '#2D1B69', point: '#FF6B6B' },  // 딥퍼플 / 살몬
+  { bg: '#1B4332', point: '#95D5B2' },  // 다크포레스트 / 민트
+  { bg: '#3D0C02', point: '#FFAB91' },  // 다크레드 / 소프트코랄
+  { bg: '#1C1C1C', point: '#F5F5F5' },  // 블랙 / 화이트
+  { bg: '#2C3E50', point: '#F39C12' },  // 다크슬레이트 / 앰버
+  { bg: '#1A237E', point: '#FFEB3B' },  // 딥인디고 / 옐로 (보색)
+  { bg: '#4A148C', point: '#A5D6A7' },  // 딥퍼플 / 소프트그린 (보색)
+  { bg: '#006064', point: '#FFF8E1' },  // 다크틸 / 아이보리 (보색)
+  { bg: '#880E4F', point: '#E0F7FA' },  // 딥와인 / 아쿠아 (보색)
+  { bg: '#1B5E20', point: '#FCE4EC' },  // 다크그린 / 블러시 (보색)
+  { bg: '#263238', point: '#80CBC4' },  // 차콜 / 민트
+  { bg: '#212121', point: '#FF8A65' },  // 거의검정 / 코랄오렌지
+  { bg: '#37474F', point: '#FFD54F' },  // 슬레이트 / 선플라워
+  { bg: '#4E342E', point: '#A5D6A7' },  // 다크모카 / 소프트민트 (보색)
+  { bg: '#3E2723', point: '#80DEEA' },  // 딥브라운 / 라이트시안 (보색)
+  { bg: '#BF360C', point: '#E8F4FD' },  // 딥러스트 / 아이스블루 (보색)
+  { bg: '#0D47A1', point: '#FFF3E0' },  // 딥블루 / 크림
+  { bg: '#558B2F', point: '#FFF9C4' },  // 올리브 / 버터
+  { bg: '#6B21A8', point: '#F0FFF4' },  // 딥퍼플 / 민트화이트
+  { bg: '#C0533A', point: '#EFF3F7' },  // 테라코타 / 쿨화이트
+  { bg: '#B03070', point: '#F0FAF5' },  // 마젠타 / 민트화이트
+  { bg: '#1565C0', point: '#FFFDE7' },  // 클래식블루 / 버터옐로
+  { bg: '#2E7D32', point: '#FCE4EC' },  // 다크그린 / 로즈화이트
+  { bg: '#6B4C2A', point: '#E8F4FD' },  // 다크브라운 / 하늘
+  { bg: '#E65100', point: '#E8EAF6' },  // 번트오렌지 / 라벤더화이트
+  { bg: '#AD1457', point: '#E8F5E9' },  // 딥핑크 / 연그린
+  { bg: '#0F7B5A', point: '#FFF9C4' },  // 에메랄드 / 버터
+  { bg: '#4527A0', point: '#FFF8E1' },  // 딥바이올렛 / 아이보리
+]
+
 const SECTION_COLORS = {
   ai_summary:           { bg: '#D8F9FD', text: '#418FAF' },
   techstack:            { bg: '#DEEAFC', text: '#3762E3' },
@@ -497,12 +592,11 @@ function SortableSection({ section, onToggle }) {
   )
 }
 
-function SectionLabel({ id, label }) {
-  const c = SECTION_COLORS[id]
+function SectionLabel({ label, pointColor }) {
   return (
     <span
-      className="self-start inline-block text-sm font-semibold px-2.5 py-0.5 rounded-full mb-2 cursor-default"
-      style={{ backgroundColor: c.bg, color: c.text }}
+      className="self-start inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-2 cursor-default bg-foreground/10 text-foreground"
+      style={pointColor ? { color: pointColor, backgroundColor: pointColor + '1A' } : {}}
     >
       {label}
     </span>
@@ -512,8 +606,19 @@ function SectionLabel({ id, label }) {
 function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
   const [sections, setSections] = useState(DEFAULT_SECTIONS)
   const [subtitle, setSubtitle] = useState(initialSubtitle)
+  const [cardColor, setCardColor] = useState(null)
+  const [pointColor, setPointColor] = useState(null)
   const [copied, setCopied] = useState(false)
+
+  const COLOR_SWATCHES = Object.values(SECTION_COLORS).map((c) => c.bg)
   const sensors = useSensors(useSensor(PointerSensor))
+
+  const cardDark = cardColor ? (() => {
+    const r = parseInt(cardColor.slice(1, 3), 16) / 255
+    const g = parseInt(cardColor.slice(3, 5), 16) / 255
+    const b = parseInt(cardColor.slice(5, 7), 16) / 255
+    return 0.299 * r + 0.587 * g + 0.114 * b < 0.5
+  })() : false
 
   const cardMarkdown = '![Trace Card](https://gitintel.app/card/...)'
 
@@ -559,6 +664,60 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
             />
           </div>
 
+          <div className="flex items-end gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm text-muted-foreground">카드 배경 색상</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={cardColor ?? '#ffffff'}
+                  onChange={(e) => setCardColor(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer border border-border"
+                />
+                {cardColor && (
+                  <button
+                    onClick={() => setCardColor(null)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    초기화
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm text-muted-foreground">포인트 색상</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={pointColor ?? '#000000'}
+                  onChange={(e) => setPointColor(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer border border-border"
+                />
+                {pointColor && (
+                  <button
+                    onClick={() => setPointColor(null)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    초기화
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const pair = COLOR_PAIRS[Math.floor(Math.random() * COLOR_PAIRS.length)]
+                setCardColor(pair.bg)
+                setPointColor(pair.point)
+              }}
+              className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+              aria-label="랜덤 색상"
+            >
+              <Shuffle className="w-4 h-4" />
+            </button>
+          </div>
+
           <div className="flex flex-col gap-2">
             <p className="text-sm text-muted-foreground">드래그로 순서 변경, 토글로 on/off</p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -575,12 +734,21 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
 
         <div className="flex flex-col gap-2">
           <p className="text-foreground font-semibold text-sm">카드 미리보기</p>
-          <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
+          <div
+            className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 transition-colors duration-200"
+            style={{
+              backgroundColor: cardColor ?? undefined,
+              ...(cardDark && {
+                '--foreground': '#ffffff',
+                '--muted-foreground': 'rgba(255,255,255,0.6)',
+                '--border': 'rgba(255,255,255,0.15)',
+              }),
+            }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-secondary shrink-0" />
               <div>
-                <p className="text-foreground font-medium text-sm">ml-pipeline</p>
-                {subtitle && <p className="text-muted-foreground text-xs mt-0.5">{subtitle}</p>}
+                <p className="text-foreground font-bold text-lg" style={pointColor ? { color: pointColor } : {}}> ml-pipeline</p>
+                {subtitle && <p className="text-foreground/70 text-sm font-semibold mt-0.5">{subtitle}</p>}
               </div>
             </div>
 
@@ -588,13 +756,13 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
               <div key={s.id} className="border-t border-border pt-3">
                 {s.id === 'ai_summary' && (
                   <div>
-                    <SectionLabel id="ai_summary" label="AI 프로젝트 요약" />
+                    <SectionLabel label="AI 프로젝트 요약" pointColor={pointColor} />
                     <p className="text-foreground text-xs leading-relaxed">{AI_SUMMARY}</p>
                   </div>
                 )}
                 {s.id === 'techstack' && (
                   <div>
-                    <SectionLabel id="techstack" label="기술 스택" />
+                    <SectionLabel label="기술 스택" pointColor={pointColor} />
                     <div className="flex gap-1.5 flex-wrap">
                       {['Python', 'FastAPI', 'Airflow', 'PostgreSQL', 'Docker'].map((t) => {
                         const hasLogo = !!getLogoEntry(t)
@@ -609,7 +777,7 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
                 )}
                 {s.id === 'timeline' && (
                   <div>
-                    <SectionLabel id="timeline" label="타임라인" />
+                    <SectionLabel label="타임라인" pointColor={pointColor} />
                     <ul className="flex flex-col gap-1">
                       {mockActivities.map((a) => (
                         <li key={a.id} className="flex items-center gap-2 text-xs">
@@ -626,7 +794,7 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
                   if (withNotes.length === 0) return null
                   return (
                     <div className="flex flex-col gap-3">
-                      <SectionLabel id="timeline_memo" label="타임라인 메모" />
+                      <SectionLabel label="타임라인 메모" pointColor={pointColor} />
                       {withNotes.map((a) => (
                         <div key={a.id}>
                           <p className="text-foreground text-xs font-medium mb-0.5">{a.title}</p>
@@ -638,7 +806,7 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
                 })()}
                 {s.id === 'contributions' && (
                   <div>
-                    <SectionLabel id="contributions" label="기여 목록" />
+                    <SectionLabel label="기여 목록" pointColor={pointColor} />
                     <ul className="flex flex-col gap-0.5">
                       {['데이터 수집 파이프라인 설계', 'Airflow DAG 작성'].map((c) => (
                         <li key={c} className="text-foreground text-xs flex gap-2"><span>•</span>{c}</li>
@@ -648,7 +816,7 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
                 )}
                 {s.id === 'contribution_evidence' && (
                   <div>
-                    <SectionLabel id="contribution_evidence" label="기여 근거" />
+                    <SectionLabel label="기여 근거" pointColor={pointColor} />
                     <p className="text-muted-foreground text-xs">커밋 a3f2c1d, b1e9d2a 외 2개 · 파일 5개 수정</p>
                   </div>
                 )}

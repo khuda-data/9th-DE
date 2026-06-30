@@ -653,14 +653,12 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
           <p className="text-foreground font-semibold text-sm">카드 구성</p>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-sm text-muted-foreground">프로젝트 부제목</label>
-              <span className="text-xs text-muted-foreground">Trace 내에서만 수정됨</span>
-            </div>
+            <label className="text-sm text-muted-foreground">프로젝트 부제목</label>
             <Input
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
               placeholder="예: ETL 파이프라인 & 데이터 인프라"
+              className="bg-secondary"
             />
           </div>
 

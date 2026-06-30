@@ -34,6 +34,11 @@ export default function Landing() {
     window.location.href = `${API_BASE}/auth/github`
   }
 
+  function handleGuestLogin() {
+    login({ login: 'guest', name: 'Guest', avatar_url: '' })
+    navigate('/dashboard', { replace: true })
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-10 px-4">
 
@@ -63,6 +68,12 @@ export default function Landing() {
         <p className="text-center text-sm text-muted-foreground">
           레포지토리 읽기 권한이 요청됩니다
         </p>
+        <button
+          onClick={handleGuestLogin}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center"
+        >
+          서버 없이 둘러보기 →
+        </button>
       </div>
 
       <div className="flex gap-12">

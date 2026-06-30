@@ -478,7 +478,7 @@ function SortableSection({ section, onToggle }) {
   return (
     <div ref={setNodeRef} style={style}
       className={`flex items-center gap-3 rounded-lg px-3 py-2 border transition-colors duration-150 ${
-        section.on ? 'border-border bg-secondary' : 'border-transparent opacity-50'
+        section.on ? 'border-border bg-secondary' : 'border-border bg-secondary/30 opacity-50'
       }`}
     >
       <Switch

@@ -736,10 +736,15 @@ function ReadmeCardTab({ initialSubtitle = '', isViewer = false }) {
             className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 transition-colors duration-200"
             style={{
               backgroundColor: cardColor ?? undefined,
-              ...(cardDark && {
+              ...(cardColor && cardDark && {
                 '--foreground': '#ffffff',
                 '--muted-foreground': 'rgba(255,255,255,0.6)',
                 '--border': 'rgba(255,255,255,0.15)',
+              }),
+              ...(cardColor && !cardDark && {
+                '--foreground': '#1B1B1E',
+                '--muted-foreground': '#6B6B6E',
+                '--border': 'rgb(0 0 0 / 9%)',
               }),
             }}
           >

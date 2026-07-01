@@ -1,2 +1,11 @@
 .env
 logs/
+
+.DS_Store
+
+__pycache__/
+*.pyc
+
+# 수집 결과물
+raw_*.json
+checkpoint.json
